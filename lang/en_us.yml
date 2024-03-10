@@ -1,0 +1,165 @@
+region_file_updater_multi:
+  help_message:
+    mcdr: 'Update region files from specified locations'
+    suggest: Click to fill command {}
+
+  error_message:
+    unexpected: Unexpected Exception
+
+  command:
+    help:
+      overview: |
+        §7=====§r §5{plugin_name}§r §6v{version}§r §7======§r
+        A plugin to update regions from specified upstream location
+        Multi upstream and §3Prime Backup§r databases are allowed
+        §d[Command overview]§r
+        §7{pre} {help}§e <command>§r Get detail of each command
+        §7{pre} {add} §rAdd region to update list
+        §7{pre} {del_} §rRemove region from update list
+        §7{pre} {del_all} §rRemove all the regions
+        §7{pre} {list} §rList the regions in update list
+        §7{pre} {update} §rRestart server and update the regions selected
+        §7{pre} {history} §rQuery the last update result
+        §7{pre} {upstream}§r Query & select upstream
+        §7{pre} {group} §rManage region groups
+        §7{pre} {reload} §rReload this plugin
+        §d[Tips]§r
+        Switching upstream could help you fetch regions from different world save or §3Prime Backup§r databases
+        Use §9region groups§r to help you remember the regions need to be updated frequently or be prevented from update
+      #  §7{pre} {del_} §6<x> <z> <dim> §rRemove specified region
+      #  §7{pre} {add} §6<x> <z> <dim> §rAdd specified region
+      #  §d[Arguments]§r
+      #  §6[x] [z]§r: Region file coordinates
+      #  e.g. Coordinates of r.§b-3§r.§d1§r.mca are §bx=-3 §dz=1§r
+      #  §6[d]§r: Dimension number
+      #  §aOverworld = 0§4 The nether = -1§d The end = 1§r
+      detailed: |
+      single_help_title: Command help of §7{pre}§r
+      usage_title: §d[Command usages]§r
+      command_omitted: The following commands has omitted §7{pre}§r
+      arguments_title: §d[Arguments]§r
+      optional_flags_title: §d[Optional flags]§r
+      optional_arguments_title: §d[Optional arguments]§r
+      list_opt_args: |
+        §7--page§6 <{page_num_arg}>§r Specify page number of the list
+        §7--per-page§b <{item_count_arg}>§r Specify quantity per page, default §b{default_count}§r
+
+    error_message:
+      permission_denied: Permission Denied
+      invalid_duration: Not a valid duration
+      unexpected: Unexpected exception
+
+    reload:
+      reloaded: Plugin reloaded
+
+    list:
+      help:
+        desc: Use this command to query the regions currently added
+        usage: |
+          §7{pre} {list}§3 [flags]§r List all regions
+      prev_button:
+        hover: Click to browse the previous page
+      next_button:
+        hover: Click to browse the next page
+      error:
+        page_index_out_of_range: Page index out of range
+
+    upstream:
+      help:
+        desc: Use command §7{pre}§r to query and select the target upstream you want to update region from
+        usage: |
+          §7{list}§3 [flags]§r List all upstreams
+          §7set §e<{upstream_name}>§r Set current upstream
+      status:
+        current: "Current upstream: §9§l{}§r"
+        more_detail: §7{pre} help {upstream}§r Get detailed command §7{upstream}§r help
+      error:
+        not_found: Upstream "{}" not found
+      list:
+        title: §7========§r Upstream list §7========§r
+        total_count: "§9{all}§r upstreams, §a{valid}§r valid in total:"
+        ups_prefix:
+          pb_hover: §3Prime backup§r database upstream
+          ws_hover: §6World save§r upstream
+        set_button:
+          hover: Click to set current upstream to {}
+          invalid_hover: "§cThis a invalid upstream"
+          already_current: "§9§l{name}§r is already current upstream"
+        fail_msg: "§cError: {}§r"
+      set:
+        fail: 'Set upstream to "{upstream}" failed: {exc}'
+        success: 'Set upstream to §9§l{upstream}§r succeeded'
+
+    add_del:
+      help:
+        desc: Use these series of command to add/remove regions to/from the current update list
+        usage: |
+          §7{pre} {add} §rAdd region that player's currently in
+          §7{pre} {add} §6<x> <z> <dim> §rAdd specified region
+          §7{pre} {del_} §rRemove region that player's currently in
+          §7{pre} {del_} §6<x> <z> <dim> §rRemove specified region
+          §7{pre} {del_all} §rRemove all the regions
+        args: |
+          §6<x> <z>§r Region file coordinates (not block coordinates)
+          e.g. Coordinates of r.§b-3§r.§d1§r.mca are §bx=-3 §dz=1§r
+          §6<dim>§r Vanilla dimension number or Custom dimension name
+          §aOverworld = 0§4 The nether = -1§d The end = 1§r
+      error:
+        invalid_dimension: Invalid dimension "{}" found
+        not_a_player: This operation can only performed by player
+
+    confirm_abort:
+      help:
+        desc: |
+          Confirm or abort the update session
+          Update session will expire in {} after created
+        usage: |
+          §7{pre} confirm §rConfirm the update session
+          §7{pre} abort §rAbort the update session
+
+    history:
+      help:
+        desc: Querying the previous update operation result
+        usage: §7{pre} {history} §rQuery the history
+      error:
+        not_recorded: No history recorded
+
+    update:
+      help:
+        desc: |
+          Execute & confirm region file update operation
+        usage: |
+          §7{pre} {update} §2[args]§r Execute update operation
+          §7{pre} {confirm} §rConfirm executing update operation
+          §7{pre} {abort} §rAbort executing update operation
+        requires_confirm: |
+          Update operation will only start after confirmed by default
+        instantly: |
+          Update operation will start instantly by default
+        update_delay: |
+          Choice of confirm or abort should be made in {}
+        args: |
+          §2[args]§r could be following values:
+          §3--instantly§r Execute update operation instantly
+          §5--requires-confirm§r Waiting for additional confirm{period_text}
+          §9--confirm-period §b<duration>§r Set confirm period instead of default {default_duration}
+
+    group:
+      help: |
+        Help of §7{pre} {range}§r:
+        §r{}
+
+      error:
+        not_found: Range "{}" not found
+        already_exists: Range "{}" already exists
+        already_enabled: Target flag is already enabled
+        already_disabled: Target flag is already disabled
+
+  units:
+    duration:
+      year: year
+      mon: month
+      day: day
+      hour: hour
+      min: min
+

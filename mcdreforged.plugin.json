@@ -1,0 +1,21 @@
+{
+    "id": "region_file_updater_multi",
+    "version": "1.0.0-alpha.1+build.240226",
+    "name": "Region file Updater Multi",
+    "description": {
+        "en_us": "A MCDR plugin to update region files in game from multiple locations",
+        "zh_cn": "一个从多个位置拉取 region 文件至本服存档的插件"
+    },
+    "author": [
+        "Ra1ny_Yuki"
+    ],
+    "link": "https://github.com/Lazy-Bing-Server/RegionFileUpdaterMulti-MCDR",
+    "dependencies": {
+        "mcdreforged": ">=2.12.0",
+        "minecraft_data_api": "*"
+    },
+    "entrypoint": "region_file_updater_multi.entry",
+    "resources": [
+        "LICENSE", "lang"
+    ]
+}
