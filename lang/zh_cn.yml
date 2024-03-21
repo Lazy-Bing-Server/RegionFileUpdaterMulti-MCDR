@@ -25,3 +25,5 @@ region_file_updater_multi:
   error_message:
     unexpected: 未知错误
     permission_denied: 权限不足
+  reload:
+    reloaded: 插件已重载

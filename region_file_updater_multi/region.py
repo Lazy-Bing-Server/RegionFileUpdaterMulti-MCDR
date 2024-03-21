@@ -1,19 +1,20 @@
 import enum
 import os
 import threading
-from typing import Iterable, TYPE_CHECKING, Union, Dict, Optional, Type, Tuple
+from typing import Iterable, TYPE_CHECKING, Dict, Optional, Type, Tuple
 from dataclasses import dataclass
 
 from region_file_updater_multi.upstream.abstract_upstream import AbstractUpstream
 from region_file_updater_multi.upstream.impl.world_upstream import WorldSaveUpstream
 from region_file_updater_multi.upstream.impl.pb_upstream import PrimeBackupUpstream
 from region_file_updater_multi.upstream.impl.invalid_upstream import InvalidUpstream
+from region_file_updater_multi.mcdr_globals import PathLike
+from region_file_updater_multi.utils.file_utils import RFUMFileNotFound
 
 
 if TYPE_CHECKING:
     from region_file_updater_multi.rfum import RegionFileUpdaterMulti
     from region_file_updater_multi.config import Config
-    from typing import Literal
 
 
 @dataclass(unsafe_hash=False)
@@ -27,7 +28,7 @@ class Region:
         return cls(int(x) // 512, int(z) // 512, dim)
 
     def to_file_name(self):
-        return 'r.{}.{}.mca'.format(self.x, self.z)
+        return "r.{}.{}.mca".format(self.x, self.z)
 
     def to_file_list(self, config: "Config"):
         file_list = []
@@ -46,6 +47,9 @@ class Region:
             return False
         return self.x == other.x and self.z == other.z and self.dim == other.dim
 
+    def __hash__(self):
+        return hash((self.x, self.z, self.dim))
+
 
 class UpstreamType(enum.Enum):
     world = WorldSaveUpstream
@@ -53,10 +57,10 @@ class UpstreamType(enum.Enum):
 
 
 class RegionUpstreamManager:
-    __instance: Optional['RegionUpstreamManager'] = None
+    __instance: Optional["RegionUpstreamManager"] = None
 
     @classmethod
-    def get_instance(cls, rfum: Optional['RegionFileUpdaterMulti'] = None):
+    def get_instance(cls, rfum: Optional["RegionFileUpdaterMulti"] = None):
         if not isinstance(cls.__instance, cls):
             if rfum is None:
                 raise RuntimeError("Create instance failed")
@@ -74,9 +78,13 @@ class RegionUpstreamManager:
             cls: Type["AbstractUpstream"] = UpstreamType[upstream_info.type].value
             try:
                 cls.assert_path_valid(upstream_info.path, self.__rfum)
-                self.__upstream[name] = cls(rfum, name, upstream_info.path, upstream_info.world_name)
+                self.__upstream[name] = cls(
+                    rfum, name, upstream_info.path, upstream_info.world_name
+                )
             except Exception as exc:
-                self.__upstream[name] = InvalidUpstream(rfum, name, upstream_info.path, upstream_info.world_name).set_error_message(cls, exc)
+                self.__upstream[name] = InvalidUpstream(
+                    rfum, name, upstream_info.path, upstream_info.world_name
+                ).set_error_message(cls, exc)
 
     @property
     def upstreams(self):
@@ -93,8 +101,11 @@ class RegionUpstreamManager:
         return lambda: self.__upstream.keys()
 
     def get_upstream_name_checker(self, node_name: str):
-        return lambda src, ctx: ctx[node_name] in self.__upstream.keys(), \
-            lambda src, ctx: self.__rfum.rtr('command.upstream.error.not_found', ctx[node_name])
+        return lambda src, ctx: ctx[
+            node_name
+        ] in self.__upstream.keys(), lambda src, ctx: self.__rfum.rtr(
+            "command.upstream.error.not_found", ctx[node_name]
+        )
 
     def set_current_upstream(self, upstream_name: str):
         if upstream_name not in self.__upstream.keys():
@@ -105,8 +116,30 @@ class RegionUpstreamManager:
     def get_required_file_list(self, region: "Region"):
         return region.to_file_list(self.__rfum.config)
 
-    def extract_region_files(self, region: "Region"):
+    def extract_region_files(
+        self,
+        region: "Region",
+        directory: Optional[PathLike] = None,
+        allow_not_found: bool = True,
+    ):
         with self.__lock:
             file_list = region.to_file_list(self.__rfum.config)
+            target_dir = (
+                directory or self.__rfum.config.paths.destination_world_directory
+            )
+            current_upstream = self.get_current_upstream()
             for file in file_list:
-                self.get_current_upstream().extract_file(file, self.__rfum.config.paths.destination_world_directory)
+                try:
+                    current_upstream.extract_file(file, target_dir)
+                except RFUMFileNotFound:
+                    if not allow_not_found:
+                        raise
+                    if self.__rfum.config.get_remove_file_when_not_found():
+                        self.__rfum.logger.info(
+                            f'- [{current_upstream.__class__.__name__}] <{current_upstream.name}> has no such file named "{file}", removed'
+                        )
+                else:
+                    self.__rfum.logger.info(
+                        f"- [{current_upstream.__class__.__name__}] <{current_upstream.name}> {file} -> {target_dir}"
+                    )
+                    # self.__rfum.file_utilities.restore(os.path.join(target_dir, file))

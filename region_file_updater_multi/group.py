@@ -1,7 +1,7 @@
 import json
 import os.path
 import threading
-from typing import TYPE_CHECKING, List, Optional, overload, Iterable, Dict
+from typing import TYPE_CHECKING, List, Optional, overload, Iterable, Dict, Union
 
 from mcdreforged.api.all import *
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class GroupFileData(RFUMSerializable):
-    name: str = ''
+    name: str = ""
     regions: List[Region] = []
     protect_regions_from_update: bool = False
     enable_whitelist: bool = False
@@ -25,7 +25,12 @@ class GroupFileData(RFUMSerializable):
 
 
 class Group:
-    def __init__(self, data: "GroupFileData", group_manager: "GroupManager", lock: Optional[threading.RLock] = None):
+    def __init__(
+        self,
+        data: "GroupFileData",
+        group_manager: "GroupManager",
+        lock: Optional[threading.RLock] = None,
+    ):
         self.__manager = group_manager
         self.__data = data
         self.__lock = lock or threading.RLock()
@@ -91,8 +96,17 @@ class Group:
             return self.__manager.save()
 
     @classmethod
-    def new(cls, name: str, group_manager: "GroupManager", lock: Optional[threading.RLock] = None):
-        return cls(GroupFileData.deserialize(dict(name=name)), group_manager=group_manager, lock=lock)
+    def new(
+        cls,
+        name: str,
+        group_manager: "GroupManager",
+        lock: Optional[threading.RLock] = None,
+    ):
+        return cls(
+            GroupFileData.deserialize(dict(name=name)),
+            group_manager=group_manager,
+            lock=lock,
+        )
 
     def is_player_whitelisted(self, player: str):
         with self.__lock:
@@ -108,7 +122,9 @@ class Group:
                 return True
             if not self.__data.protect_regions_from_update:
                 return True
-            return self.is_player_whitelisted(source.player) and not self.is_player_blacklisted(source.player)
+            return self.is_player_whitelisted(
+                source.player
+            ) and not self.is_player_blacklisted(source.player)
 
 
 class GroupManager:
@@ -119,11 +135,7 @@ class GroupManager:
         self.__groups: Dict[str, Group] = {}
         self.load()
 
-    @overload
-    def is_present(self, group: Group):
-        ...
-
-    def is_present(self, group: str):
+    def is_present(self, group: Union[str, Group]):
         with self.__lock:
             if isinstance(group, str):
                 group = self.get_group(group)
@@ -132,19 +144,20 @@ class GroupManager:
     def get_group_suggester(self) -> CommandCallback[Iterable[str]]:
         def suggester():
             return self.__groups.keys()
+
         return suggester
 
     def load(self) -> bool:
         with self.__lock:
             self.__groups = {}
             try:
-                with open(self.__path, 'r', encoding='utf8') as f:
+                with open(self.__path, "r", encoding="utf8") as f:
                     data_list = deserialize(json.load(f), List[GroupFileData])
             except FileNotFoundError:
                 self.save()
                 return True
             except (KeyError, ValueError):
-                self.__rfum.logger.exception(f"Loading group file failed")
+                self.__rfum.logger.exception("Loading group file failed")
                 self.save()
                 return False
             for item in data_list:
@@ -157,10 +170,10 @@ class GroupManager:
             if os.path.isdir(self.__path):
                 os.removedirs(self.__path)
             try:
-                with open(self.__path, 'w', encoding='utf8') as f:
+                with open(self.__path, "w", encoding="utf8") as f:
                     json.dump(serialize(data_list), f, ensure_ascii=False, indent=4)
             except (KeyError, ValueError):
-                self.__rfum.logger.exception(f"Saving group file failed")
+                self.__rfum.logger.exception("Saving group file failed")
                 return False
             return True
 
@@ -192,4 +205,9 @@ class GroupManager:
                 yield group
 
     def is_region_permitted(self, source: CommandSource, region: Region):
-        return all([group.is_src_permitted(source) for group in self.get_group_by_region(region)])
+        return all(
+            [
+                group.is_src_permitted(source)
+                for group in self.get_group_by_region(region)
+            ]
+        )

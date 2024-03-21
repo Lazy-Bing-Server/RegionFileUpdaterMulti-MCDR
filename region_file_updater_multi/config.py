@@ -1,8 +1,11 @@
 import sys
-from typing import Dict, Union, List, Any, Optional, TYPE_CHECKING, get_type_hints
+from typing import Dict, Union, List, Any, Optional, TYPE_CHECKING
 
-from region_file_updater_multi.mcdr_globals import PRIME_BACKUP_ID
-from region_file_updater_multi.utils.serializer import BlossomSerializable, ConfigurationBase
+from region_file_updater_multi.mcdr_globals import PrimeBackupLogParsingArguments
+from region_file_updater_multi.utils.serializer import (
+    BlossomSerializable,
+    ConfigurationBase,
+)
 from region_file_updater_multi.commands.tree_constants import *
 from region_file_updater_multi.utils.units import Duration
 
@@ -22,7 +25,7 @@ class Config(ConfigurationBase):
     default_item_per_page: int = 10
 
     class Command(BlossomSerializable):
-        command_prefix: Union[List[str], str] = '!!rfum'
+        command_prefix: Union[List[str], str] = ["!!rfum", "!!region"]
 
         class Permission(BlossomSerializable):
             __default = {
@@ -34,7 +37,7 @@ class Config(ConfigurationBase):
                 HISTORY: 1,
                 UPDATE: 2,
                 GROUP: 2,
-                UPSTREAM: 3
+                UPSTREAM: 3,
             }
             __dict__ = __default
             __annotations__ = {}
@@ -52,63 +55,95 @@ class Config(ConfigurationBase):
 
     class UpdateOperation(BlossomSerializable):
         update_requires_confirm: bool = True
-        confirm_time_wait: Duration = Duration('1min')
-        update_delay_in_seconds: Duration = Duration('10s')
+        confirm_time_wait: Duration = Duration("1min")
+        update_delay: Duration = Duration("10s")
+        prime_backup_file_not_found_log_format: List[str] = [
+            "File '{file_name}' in backup #{backup_id:d} does not exist"
+        ]
 
     update_operation: UpdateOperation = UpdateOperation.get_default()
 
     class Paths(BlossomSerializable):
         pb_plugin_package_path: Optional[str] = None
-        destination_world_directory: str = './server/world'
-        current_upstream: str = 'survival_pb'
+        destination_world_directory: str = "./server/world"
+        current_upstream: str = "survival_pb"
 
         class Upstream(BlossomSerializable):
-            type: str = 'world'
+            type: str = "world"
             path: str = "../survival/qb_multi/slot1"
-            world_name: str = 'world'
+            world_name: str = "world"
 
             def validate_attribute(self, attr_name: str, attr_value: Any, **kwargs):
-                if attr_name == 'type' and attr_value not in ['prime_backup', 'world']:
+                if attr_name == "type" and attr_value not in ["prime_backup", "world"]:
                     raise ValueError("Invalid upstream value provided")
 
         upstreams: Optional[Dict[str, Upstream]] = {
-            'survival_pb': Upstream.deserialize(dict(type='prime_backup', path="../survival/pb_files/prime_backup.db")),
-            'survival_qb': Upstream.get_default(),
+            "survival_pb": Upstream.deserialize(
+                dict(type="prime_backup", path="../survival/pb_files/prime_backup.db")
+            ),
+            "survival_qb": Upstream.get_default(),
         }
         dimension_region_folder: Dict[str, Union[str, List[str]]] = {
-            '-1': ['DIM-1/region', 'DIM-1/poi'],
-            '0': ['region', 'poi'],
-            '1': ['DIM1/region', 'DIM1/poi']
+            "-1": ["DIM-1/region", "DIM-1/poi"],
+            "0": ["region", "poi"],
+            "1": ["DIM1/region", "DIM1/poi"],
         }
 
     paths: Paths = Paths.get_default()
 
-    verbosity: bool
-    enable_debug_commands: bool
+    class Debug(BlossomSerializable):
+        verbosity: bool
+        enable_debug_commands: bool
 
-    popen_decoding: str
-    python_executable: str
-    popen_terminate_timeout: int
+        popen_decoding: str
+        python_executable: str
+        popen_terminate_timeout: int
+
+        prime_backup_log_format: List[str]
+
+        thread_pool_executor_max_workers: int
+
+        remove_file_while_not_found: bool
+
+    debug: Optional[Debug] = None
 
     def validate_attribute(self, attr_name: str, attr_value: Any, **kwargs):
-        if attr_name == 'command_prefix':
+        if attr_name == "command_prefix":
             if isinstance(attr_value, str):
                 attr_value = [attr_value]
                 for p in attr_value:
-                    if ' ' in p:
+                    if " " in p:
                         raise ValueError("Illegal command prefix with space found")
 
+    def get_debug_options(self):
+        return self.debug or self.Debug.get_default()
+
     def get_verbosity(self):
-        return self.get('verbosity', False)
+        return self.get_debug_options().get("verbosity", False)
 
     def get_enable_debug_commands(self):
-        return self.get('enable_debug_commands', False)
+        return self.get_debug_options().get("enable_debug_commands", False)
 
     def get_python_executable(self):
-        return self.get('python_executable', sys.executable)
+        return self.get_debug_options().get("python_executable", sys.executable)
 
     def get_popen_decoding(self):
-        return self.get('popen_decoding')
+        return self.get_debug_options().get("popen_decoding")
 
     def get_popen_terminate_timeout(self):
-        return self.get('popen_terminate_timeout', 5)
+        return self.get_debug_options().get("popen_terminate_timeout", 5)
+
+    def get_pb_log_format(self):
+        args = PrimeBackupLogParsingArguments
+        return self.get_debug_options().get(
+            "prime_backup_log_format",
+            [
+                f"[{args.YEAR}-{args.MONTH}-{args.DAY} {args.HOUR}:{args.MINUTE}:{args.SECOND},{args.SEC_DECIMAL} {args.LEVEL}] {args.MSG}"
+            ],
+        )
+
+    def get_thread_pool_executor_max_workers(self):
+        return self.get_debug_options().get("thread_pool_executor_max_workers", 10)
+
+    def get_remove_file_when_not_found(self):
+        return self.get_debug_options().get("remove_file_while_not_found", True)

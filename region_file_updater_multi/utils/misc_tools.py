@@ -5,16 +5,22 @@ import threading
 
 from mcdreforged.api.decorator import FunctionThread
 from mcdreforged.api.types import CommandSource, PlayerCommandSource
-from typing import Optional, Callable, Union, TYPE_CHECKING, Any
+from typing import Optional, Callable, Union, TYPE_CHECKING, Any, Type, TypeVar
+from concurrent.futures.thread import ThreadPoolExecutor as ConcurrentTPE
+from apscheduler.executors.pool import ThreadPoolExecutor as APSchedulerTPE
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import BaseScheduler
 
-from region_file_updater_multi.mcdr_globals import SELF_PLUGIN_NAME_SHORT
+from region_file_updater_multi.mcdr_globals import (
+    SELF_PLUGIN_NAME_SHORT,
+)
 
 if TYPE_CHECKING:
     from region_file_updater_multi.rfum import RegionFileUpdaterMulti
 
 
 class RFUMInstance:
-    __rfum: Optional['RegionFileUpdaterMulti'] = None
+    __rfum: Optional["RegionFileUpdaterMulti"] = None
 
     @classmethod
     def set_rfum(cls, rfum: "RegionFileUpdaterMulti"):
@@ -28,20 +34,20 @@ class RFUMInstance:
 def capitalize(string: str) -> str:
     char_list = list(string)
     char_list[0] = char_list[0].upper()
-    return ''.join(char_list)
+    return "".join(char_list)
 
 
-def to_camel_case(string: str, divider: str = ' ', upper: bool = True) -> str:
+def to_camel_case(string: str, divider: str = " ", upper: bool = True) -> str:
     word_list = [capitalize(item) for item in string.split(divider)]
     if not upper:
         first_word_char_list = list(word_list[0])
         first_word_char_list[0] = first_word_char_list[0].lower()
-        word_list[0] = ''.join(first_word_char_list)
-    return ''.join(word_list)
+        word_list[0] = "".join(first_word_char_list)
+    return "".join(word_list)
 
 
 def get_thread_prefix() -> str:
-    return to_camel_case(SELF_PLUGIN_NAME_SHORT, divider='_') + '@'
+    return to_camel_case(SELF_PLUGIN_NAME_SHORT, divider="_") + "@"
 
 
 def named_thread(arg: Optional[Union[str, Callable]] = None) -> Callable:
@@ -55,10 +61,14 @@ def named_thread(arg: Optional[Union[str, Callable]] = None) -> Callable:
                     return func(*args, **kwargs)
                 finally:
                     if sys.exc_info()[0] is not None and rfum is not None:
-                        rfum.logger.exception(f'Error running thread {threading.current_thread().name}')
+                        rfum.logger.exception(
+                            f"Error running thread {threading.current_thread().name}"
+                        )
 
             prefix = get_thread_prefix()
-            thread = FunctionThread(target=try_func, args=[], kwargs={}, name=prefix + thread_name)
+            thread = FunctionThread(
+                target=try_func, args=[], kwargs={}, name=prefix + thread_name
+            )
             thread.start()
             return thread
 
@@ -67,10 +77,12 @@ def named_thread(arg: Optional[Union[str, Callable]] = None) -> Callable:
         return wrap
 
     # Directly use @new_thread without ending brackets case, e.g. @new_thread
-    if isinstance(arg, Callable):
+    if callable(arg):
         thread_name = to_camel_case(arg.__name__, divider="_")
         return wrapper(arg)
     # Use @new_thread with ending brackets case, e.g. @new_thread('A'), @new_thread()
+    elif arg is None:
+        return named_thread
     else:
         thread_name = arg
         return wrapper
@@ -92,11 +104,43 @@ def represent(obj: Any, *, attrs: Optional[dict] = None) -> str:
     Licensed under LGPL-v3.0
     """
     if attrs is None:
-        attrs = {name: value for name, value in vars(obj).items() if not name.startswith('_')}
+        attrs = {
+            name: value for name, value in vars(obj).items() if not name.startswith("_")
+        }
     kv = []
     for name, value in attrs.items():
-        kv.append(f'{name}={value}')
-    return '{}({})'.format(type(obj).__name__, ', '.join(kv))
+        kv.append(f"{name}={value}")
+    return "{}({})".format(type(obj).__name__, ", ".join(kv))
 
 
+def get_thread_pool_executor(
+    max_workers: Optional[int] = None,
+    thread_name_prefix: str = "",
+    is_apscheduler: bool = False,
+    **executor_kwargs,
+):
+    config = RFUMInstance.get_rfum().config
+    max_workers = max_workers or config.get_thread_pool_executor_max_workers()
+    plugin_prefix = get_thread_prefix()
+    if not thread_name_prefix.startswith(plugin_prefix):
+        thread_name_prefix = plugin_prefix + thread_name_prefix
+    executor_kwargs["thread_name_prefix"] = thread_name_prefix
+    if is_apscheduler:
+        return APSchedulerTPE(max_workers=max_workers, pool_kwargs=executor_kwargs)
+    else:
+        return ConcurrentTPE(max_workers=max_workers, **executor_kwargs)
 
+
+AnyScheduler = TypeVar("AnyScheduler", bound=BaseScheduler)
+
+
+def get_scheduler(
+    scheduler_cls: Type[AnyScheduler] = BackgroundScheduler,
+) -> AnyScheduler:
+    scheduler = scheduler_cls()
+    scheduler.add_executor(
+        get_thread_pool_executor(
+            is_apscheduler=True, thread_name_prefix="SessionScheduler"
+        )
+    )
+    return scheduler

@@ -63,47 +63,53 @@ Might be slightly different to the actual tree
     │           └── Literal 'disable'
     └── Literal 'reload'
 """
+
 # Literals
-HELP = 'help'
-UPSTREAM = 'upstream'
-ADD = 'add'
-DEL = 'del'
-DEL_ALL = 'del-all'
-LIST = 'list'
-UPDATE = 'update'
-CONFIRM = 'confirm'
-ABORT = 'abort'
-HISTORY = 'history'
-GROUP = 'group'
-USE = 'use'
-ENABLE = 'enable'
-DISABLE = 'disable'
-WHITELIST = 'whitelist'
-BLACKLIST = 'blacklist'
-PROTECT = 'protect'
-RELOAD = 'reload'
+HELP = "help"
+UPSTREAM = "upstream"
+ADD = "add"
+DEL = "del"
+DEL_ALL = "del-all"
+LIST = "list"
+UPDATE = "update"
+CONFIRM = "confirm"
+ABORT = "abort"
+HISTORY = "history"
+GROUP = "group"
+USE = "use"
+ENABLE = "enable"
+DISABLE = "disable"
+WHITELIST = "whitelist"
+BLACKLIST = "blacklist"
+PROTECT = "protect"
+RELOAD = "reload"
 
 # Arguments
-UPS_NAME = 'upstream_name'
-GROUP_NAME = 'group_name'
-NEW_GROUP_NAME = 'new_group_name'
-PLAYER_TBWL = 'player_to_be_whitelisted'
-PLAYER_TBBL = 'player_to_be_blacklisted'
-WLED_PLAYER = 'whitelisted_player'
-BLED_PLAYER = 'blacklisted_player'
-X = 'x'
-Z = 'z'
-DIM = 'dimension'
-PAGE_INDEX = 'page_num'
-ITEM_PER_PAGE = 'item_count'
+UPS_NAME = "upstream_name"
+GROUP_NAME = "group_name"
+NEW_GROUP_NAME = "new_group_name"
+PLAYER_TBWL = "player_to_be_whitelisted"
+PLAYER_TBBL = "player_to_be_blacklisted"
+WLED_PLAYER = "whitelisted_player"
+BLED_PLAYER = "blacklisted_player"
+X = "x"
+Z = "z"
+DIM = "dimension"
+PAGE_INDEX = "page_num"
+ITEM_PER_PAGE = "item_count"
 
 # Optional
-INSTANTLY = '--instantly'
-INSTANTLY_COUNT = 'instantly_count'
-REQUIRES_CONFIRM = '--requires-confirm'
-REQUIRES_CONFIRM_COUNT = 'requires_confirm_count'
-DURATION = 'duration'
+INSTANTLY = "--instantly"
+INSTANTLY_COUNT = "instantly_count"
+REQUIRES_CONFIRM = "--requires-confirm"
+REQUIRES_CONFIRM_COUNT = "requires_confirm_count"
+CONFIRM_TIME_WAIT = "--confirm-time-wait"
+DURATION = "duration"
 
 # Debug
-DEBUG = 'debug'
-TARGET_FILE = 'target_file'
+DEBUG = "debug"
+TARGET_FILE = "target_file"
+
+ALLOW_NOT_FOUND = "--allow-not-found"
+ANF_COUNT = "anf_count"
+CLEAR_COUNT = "clear_count"

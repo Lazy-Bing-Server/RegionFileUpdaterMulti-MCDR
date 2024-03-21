@@ -1,3 +1,4 @@
+import datetime
 import json
 import os.path
 import shutil
@@ -17,13 +18,22 @@ if TYPE_CHECKING:
     from region_file_updater_multi.rfum import RegionFileUpdaterMulti
 
 
+class RFUMFileNotFound(FileNotFoundError):
+    pass
+
+
 class RecycledFile:
     @dataclass
     class Metadata:
         original_file_path: str
         delete_time: float
 
-    def __init__(self, path_in_bin: str, rfum: "RegionFileUpdaterMulti", lock: Optional[threading.RLock] = None):
+    def __init__(
+        self,
+        path_in_bin: str,
+        rfum: "RegionFileUpdaterMulti",
+        lock: Optional[threading.RLock] = None,
+    ):
         self.__rfum = rfum
         self.__slot_path = path_in_bin
         self.__meta: Optional[RecycledFile.Metadata] = None
@@ -34,16 +44,22 @@ class RecycledFile:
         if not os.path.isfile(self.meta_path):
             return False
         try:
-            with open(self.meta_path, 'r', encoding='utf8') as f:
+            with open(self.meta_path, "r", encoding="utf8") as f:
                 self.__meta = deserialize(json.load(f), self.Metadata)
         except Exception as e:
-            self.__rfum.verbose(f'[{e.__class__.__name__}] {str(e)}')
+            self.__rfum.verbose(f"[{e.__class__.__name__}] {str(e)}")
             self.__meta = None
         return self.__meta is not None
 
     @property
     def is_available(self):
-        return all([os.path.isdir(self.__slot_path), self.load_metadata(), os.path.exists(self.file_path)])
+        return all(
+            [
+                os.path.isdir(self.__slot_path),
+                self.load_metadata(),
+                os.path.exists(self.file_path),
+            ]
+        )
 
     @property
     def path_in_bin(self) -> Path:
@@ -73,16 +89,19 @@ class RecycledFile:
         if metadata is not None:
             self.__meta = metadata
         try:
-            with open(self.meta_path, 'w', encoding='utf8') as f:
+            with open(self.meta_path, "w", encoding="utf8") as f:
                 json.dump(serialize(metadata), f, ensure_ascii=False, indent=4)
         except Exception as e:
-            self.__rfum.verbose(f'[{e.__class__.__name__}] {str(e)}')
+            self.__rfum.verbose(f"[{e.__class__.__name__}] {str(e)}")
             self.__meta = None
             return False
         return True
 
     def restore(self):
         with self.__lock:
+            self.__rfum.verbose(
+                f"Restoring file {self.__meta.original_file_path} deleted at {datetime.datetime.fromtimestamp(self.delete_time)}"
+            )
             if not self.is_available:
                 return
             if os.path.isfile(self.original_path):
@@ -125,12 +144,19 @@ class FileUtils:
     def get_recycled_file_by_original_path(self, original_path: PathLike):
         with self.__lock:
             for recycled_file in self.get_recycled_files():
+                if recycled_file.original_path is None:
+                    continue
                 if os.path.samefile(recycled_file.original_path, original_path):
                     return recycled_file
 
     def restore(self, original_path: PathLike):
         with self.__lock:
             self.get_recycled_file_by_original_path(original_path).restore()
+
+    def restore_all(self):
+        with self.__lock:
+            for item in self.get_recycled_files(True):
+                item.restore()
 
     def get_a_temp_dir_path(self):
         with self.__lock:
@@ -146,9 +172,11 @@ class FileUtils:
     def recycle(self, target_file: str):
         with self.__lock:
             if not os.path.exists(target_file):
-                raise FileNotFoundError(target_file)
+                raise RFUMFileNotFound(target_file)
             dir_path = self.get_a_temp_dir_path()
-            meta = RecycledFile.Metadata(original_file_path=target_file, delete_time=time.time())
+            meta = RecycledFile.Metadata(
+                original_file_path=target_file, delete_time=time.time()
+            )
             recycled_file = RecycledFile(dir_path, self.__rfum, self.__lock)
             self.move(target_file, recycled_file.file_path)
             recycled_file.save_metadata(meta)
@@ -160,45 +188,49 @@ class FileUtils:
         elif os.path.isfile(target_file):
             os.remove(target_file)
         elif not allow_not_found:
-            raise FileNotFoundError(target_file)
+            raise RFUMFileNotFound(target_file)
 
     def copy(
-            self,
-            original_file: str,
-            target_path: str,
-            allow_not_found: bool = False,
-            allow_overwrite: bool = True,
-            recycle_overwritten_file: bool = True
+        self,
+        original_file: PathLike,
+        target_path: PathLike,
+        allow_not_found: bool = False,
+        allow_overwrite: bool = True,
+        recycle_overwritten_file: bool = True,
     ):
-        if os.path.exists(target_path):
-            if allow_overwrite:
-                if recycle_overwritten_file:
-                    self.recycle(target_path)
+        def delete_target():
+            if os.path.exists(target_path):
+                if allow_overwrite:
+                    if recycle_overwritten_file:
+                        self.recycle(target_path)
+                    else:
+                        self.delete(target_path)
                 else:
-                    self.delete(target_path)
-            else:
-                raise FileExistsError(target_path)
+                    raise FileExistsError(target_path)
+
         if os.path.isdir(original_file):
+            delete_target()
             shutil.copytree(original_file, target_path)
         elif os.path.isfile(original_file):
+            delete_target()
             shutil.copy2(original_file, target_path)
         elif not allow_not_found:
-            raise FileNotFoundError(original_file)
+            raise RFUMFileNotFound(original_file)
 
     def move(
-            self,
-            original_file: str,
-            target_path: str,
-            allow_not_found: bool = False,
-            allow_overwrite: bool = True,
-            recycle_overwritten_file: bool = True
+        self,
+        original_file: str,
+        target_path: str,
+        allow_not_found: bool = False,
+        allow_overwrite: bool = True,
+        recycle_overwritten_file: bool = True,
     ):
         self.copy(
             original_file,
             target_path,
             allow_not_found=allow_not_found,
             allow_overwrite=allow_overwrite,
-            recycle_overwritten_file=recycle_overwritten_file
+            recycle_overwritten_file=recycle_overwritten_file,
         )
         self.delete(original_file)
 
@@ -216,14 +248,16 @@ class FileUtils:
             os.makedirs(folder_path)
         return folder_path
 
-    def lf_read(self, target_file_path: str, *, is_bundled: bool = False, encoding: str = 'utf8') -> str:
+    def lf_read(
+        self, target_file_path: PathLike, *, is_bundled: bool = False, encoding: str = "utf8"
+    ) -> str:
         if is_bundled:
-            with self.__rfum.server.open_bundled_file(target_file_path) as f:
-                file_string = f.read()
+            with self.__rfum.server.open_bundled_file(str(target_file_path)) as f:
+                file_string = f.read().decode(encoding)
         else:
-            with open(target_file_path, 'r', encoding=encoding) as f:
+            with open(target_file_path, "r", encoding=encoding) as f:
                 file_string = f.read()
-        return file_string.replace('\r\n', '\n').replace('\r', '\n')
+        return file_string.replace("\r\n", "\n").replace("\r", "\n")
 
     def list_bundled_file(self, directory_name: str):
         server = self.__rfum.server
@@ -232,22 +266,24 @@ class FileUtils:
             return server.get_plugin_file_path(server.get_self_metadata().id)
         if os.path.isdir(package):
             return os.listdir(os.path.join(package, directory_name))
-        with ZipFile(package, 'r') as zip_file:
+        with ZipFile(package, "r") as zip_file:
             result = []
-            directory_name = directory_name.replace('\\', '/').rstrip('/\\') + '/'
+            directory_name = directory_name.replace("\\", "/").rstrip("/\\") + "/"
             for file_info in zip_file.infolist():
                 # is inside the dir and is directly inside
                 if file_info.filename.startswith(directory_name):
-                    file_name = file_info.filename.replace(directory_name, '', 1)
-                    if len(file_name) > 0 and '/' not in file_name.rstrip('/'):
+                    file_name = file_info.filename.replace(directory_name, "", 1)
+                    if len(file_name) > 0 and "/" not in file_name.rstrip("/"):
                         result.append(file_name)
         return result
 
     @contextmanager
-    def safe_write(self, target_file_path: str, *, encoding: str = 'utf8') -> ContextManager[TextIO]:
-        temp_file_path = target_file_path + '.tmp'
+    def safe_write(
+        self, target_file_path: PathLike, *, encoding: str = "utf8"
+    ):
+        temp_file_path = str(target_file_path) + ".tmp"
         self.delete(temp_file_path)
-        with open(temp_file_path, 'w', encoding=encoding) as file:
+        with open(temp_file_path, "w", encoding=encoding) as file:
             yield file
         os.replace(temp_file_path, target_file_path)
 
@@ -256,5 +292,10 @@ class FileUtils:
         os.makedirs(self.__path)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_tb is not None:
+            for item in self.get_recycled_files(reverse_order=True):
+                try:
+                    item.restore()
+                except:
+                    pass
         self.empty()
-

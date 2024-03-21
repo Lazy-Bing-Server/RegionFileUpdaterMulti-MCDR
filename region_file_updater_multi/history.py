@@ -1,6 +1,6 @@
 import json
-import os.path
 import threading
+import time
 from typing import TYPE_CHECKING, Optional, Dict
 
 from region_file_updater_multi.utils.serializer import RFUMSerializable
@@ -11,9 +11,11 @@ if TYPE_CHECKING:
 
 class History:
     class HistoryData(RFUMSerializable):
-        player: str
+        player: Optional[str]
+        timestamp: float
         is_last_operation_succeeded: bool
-        last_operation_mca: Dict[str, str]
+        upstream_name: str
+        last_operation_mca: Dict[str, Optional[str]]
 
     def __init__(self, path: str, rfum: "RegionFileUpdaterMulti"):
         self.__rfum = rfum
@@ -32,7 +34,7 @@ class History:
     def load_history(self) -> Optional["HistoryData"]:
         with self.__lock:
             try:
-                with open(os.path.join(self.__path), 'r', encoding='utf8') as f:
+                with open(self.__path, "r", encoding="utf8") as f:
                     return History.HistoryData.deserialize(json.load(f))
             except (KeyError, ValueError, FileNotFoundError):
                 return None
@@ -41,8 +43,10 @@ class History:
         with self.__lock:
             if data is None:
                 data = self.__data
+            if data is None:
+                return False
             try:
-                with open(os.path.join(self.__rfum.server.get_data_folder(), self.__path), 'w', encoding='utf8') as f:
+                with open(self.__path, "w", encoding="utf8") as f:
                     json.dump(data.serialize(), f, ensure_ascii=False, indent=4)
             except (KeyError, ValueError):
                 return False
@@ -50,10 +54,23 @@ class History:
                 self.__data = data
                 return True
 
-    def record(self, player: str, is_last_operation_succeeded: bool, last_operation_mca: Dict[str, str]):
+    def record(
+        self,
+        player: str,
+        is_last_operation_succeeded: bool,
+        last_operation_mca: Dict[str, Optional[str]],
+        upstream_name: str,
+        timestamp: Optional[float] = None,
+    ):
         with self.__lock:
-            self.save_history(self.HistoryData.deserialize(dict(
-                player=player,
-                is_last_operation_succeeded=is_last_operation_succeeded,
-                last_operation_mca=last_operation_mca
-            )))
+            self.save_history(
+                self.HistoryData.deserialize(
+                    dict(
+                        player=player,
+                        timestamp=timestamp or time.time(),
+                        is_last_operation_succeeded=is_last_operation_succeeded,
+                        upstream_name=upstream_name,
+                        last_operation_mca=last_operation_mca,
+                    )
+                )
+            )
