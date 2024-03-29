@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Dict, Optional, Callable, Any, Union
 
 from mcdreforged.api.all import *
 
-from region_file_updater_multi.region import Region
+from region_file_updater_multi.region_upstream_manager import Region
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.base import BaseTrigger
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from region_file_updater_multi.rfum import RegionFileUpdaterMulti
 
 
-class CurrentSession:
+class UpdateSession:
     def __init__(self, rfum: "RegionFileUpdaterMulti"):
         self.__region_list_lock = threading.RLock()
         self.__session_pending_lock = threading.Lock()
@@ -68,15 +68,15 @@ class CurrentSession:
             if region in self.__regions.keys():
                 raise ValueError(f"{repr(region)} already exists")
             self.__regions[region] = player
-            self.__rfum.verbose(f"Added region {str(region)}")
+            self.__rfum.verbose(f"{player or 'Console'} added region {str(region)}")
 
-    def remove_region(self, region: Region):
+    def remove_region(self, region: Region, player: Optional[str]):
         self.assert_allowed()
         with self.__region_list_lock:
             if region not in self.__regions.keys():
                 raise ValueError(f"{repr(region)} not found in current session")
             del self.__regions[region]
-            self.__rfum.verbose(f"Removed region {str(region)}")
+            self.__rfum.verbose(f"{player or 'Console'} removed region {str(region)}")
 
     def remove_all_regions(self):
         self.assert_allowed()

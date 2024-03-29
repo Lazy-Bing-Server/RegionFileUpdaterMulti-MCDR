@@ -76,6 +76,9 @@ region_file_updater_multi:
         text: "§7========§r Region list §7========§r"
         add_hover: Click to§d add§r another region
       amount: "Added §3{amount}§r regions: {add}"
+      list_hint:
+        text: "[§dShow region list§r]"
+        hover: Click to show §dregion list§r
 
 
     upstream:
@@ -109,18 +112,18 @@ region_file_updater_multi:
 
     group:
       help:
+        overview: |
+          §7{pre} {help} {group}§r Show detailed help
         desc: Use command §7{pre}§r to manage regions in group
         usage: |
           §7{list}§3 [args]§r List all groups
-          §7create §b<group>§r Create new group
           §7info §b<group>§r Show detailed info of a group
+          §7create §b<group>§r Create new group
           §7delete §b<group>§r Delete a existing group
           §7expand §b<group>§r Add current region to a group
           §7expand §b<group>§6 <x> <z> <dim> §r Add a region to a group
           §7contract §b<group>§r Remove current region a from a group
           §7contract §b<group>§6 <x> <z> <dim> §r Remove a region from a group
-          §7use §b<group>§r Merge group regions to the current update list
-          §7cull §b<group>§r Cull regions in the group from update list
           §7protect §b<group>§e enable§7 |§e disable§r
           Allow/forbid regions in group to be updated by anyone
           §7whitelist §b<group>§e append§7 |§e remove§7 |§e enable§7 |§e disable§7 |§e list
@@ -130,10 +133,48 @@ region_file_updater_multi:
           §8- §rGroup modification
           §8- §rUnauthorized region update (§7when protection enabled§r)
       error:
+        perm_not_found: Permission for player {} not found
         not_found: Group "{}" not found
+        unknown: Unknown error
         already_exists: Group "{}" already exists
         already_enabled: Target flag is already enabled
         already_disabled: Target flag is already disabled
+        region_exists: §b{region}§r is already included in group §3{group}§r
+        region_not_found: §b{region}§r is not found in group §3{group}§r
+      created: Created group §b{}§r
+      deleted: Deleted group §b{}§r
+      expanded: §dAdded§r §b{region}§r to group §3{group}§r
+      contracted: §dRemoved§r §b{region}§r from group §3{group}§r
+      info:
+        title: Detailed info of group §b§l{}§r
+        regions: "Region amount: §3{count}§r {hint}"
+        default_perm: "Default permission: {}"
+        detailed_perm: ">> Detailed player permission <<"
+      list:
+        line_hover: Click here to view detail of group §b{}§r
+        title: "§7========§r Group list §7========§r"
+        create_hover: "Click to §6create§r a new group"
+        amount: "§3{}§r groups in total: "
+      set: "§dSet§r player §6{player.possessive}§r permission in group §b{group}§r to {perm}"
+      requires_confirm_1: §eYour administrator privilege will be deprived!!!
+      requires_confirm_2: §eRepeat the command to confirm doing this in {}
+      confirm_timeout: Confirm timed out, there's no change to permission
+      deleted_perm: "§dDeleted§r player §6{player.possessive}§r permission in group §b{group}§r"
+
+
+      perm_list:
+        title: "§7======§r Permission list §7======§r"
+        amount: "Group §b{group}§r has §3{count}§r player permission info:"
+        edit_hover: Click to§d edit§r player {player.possessive} permission in group {group}
+        del_hover: Click to§d delete§r player {player.possessive} permission in group {group}
+
+      region_list:
+        title: "§7======§r Group region list §7======§r"
+        amount: "Group §b{group}§r has §3{count}§r regions:"
+        add_hover: "Click to add another region to this group"
+        del_hover: "Click to remove this region from this group"
+
+      set_default_perm: §dSet§r default permission of group §b{group}§r to {perm}
 
 
     add_del:
@@ -158,6 +199,10 @@ region_file_updater_multi:
       existed: §b{}§c is already added§r
       not_added: §b{}§c is not added§r
       removed_all: §dRemoved§r all the regions
+      batch_add: Adding §b{succeeded}§r regions succeeded, §3{failed} failed
+      batch_del: Deleting §b{succeeded}§r regions succeeded, §3{failed} failed
+      group_warning: "§b{}§r is included in following groups:"
+      warn_count: "§3{}§r groups in total"
 
     confirm_abort:
       help:
@@ -220,10 +265,6 @@ region_file_updater_multi:
           §5{requires_confirm}§r Waiting for additional confirm{period_text}
           §9{confirm_time_wait} §b<duration>§r Set confirm period instead of default {default_duration}
       broadcast: "Going to update §3{}§r regions: {}"
-      list:
-        text: "[§dShow region list§r]"
-        hover: Click to show §dregion list§r
-
       execute_confirm: §aConfirmed§r update task
       execute_abort: Aborting update task
 
@@ -253,4 +294,9 @@ region_file_updater_multi:
   format:
     datetime: "%d %b %Y, %I:%M:%S%p"
     console: "Console"
+
+  group_permission:
+    denied: denied
+    user: user
+    admin: administrator
 

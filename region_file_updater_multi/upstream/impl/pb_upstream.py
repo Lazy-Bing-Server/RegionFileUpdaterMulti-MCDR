@@ -79,7 +79,7 @@ class PrimeBackupUpstream(AbstractUpstream):
             raise FileNotFoundError(path)
         if not os.path.isfile(path):
             raise IsADirectoryError(path)
-        if not os.path.splitext(path)[1] == '.db':
+        if not os.path.splitext(path)[1] == ".db":
             raise ValueError("Not a db file path provided")
 
     @classmethod
@@ -91,7 +91,7 @@ class PrimeBackupUpstream(AbstractUpstream):
 
     @classmethod
     def is_path_valid(cls, path: PathLike):
-        return os.path.isfile(path) and os.path.splitext(path)[1] == '.db'
+        return os.path.isfile(path) and os.path.splitext(path)[1] == ".db"
 
     def __init__(
         self, rfum: "RegionFileUpdaterMulti", name: str, file_path: str, world_name: str

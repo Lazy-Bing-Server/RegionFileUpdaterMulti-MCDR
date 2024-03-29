@@ -1,7 +1,4 @@
-
 from typing import TYPE_CHECKING, Optional, Type
-
-from mcdreforged.api.rtext import *
 
 from region_file_updater_multi.upstream.abstract_upstream import AbstractUpstream
 

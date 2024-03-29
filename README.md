@@ -12,7 +12,7 @@ all the functions of original version are ready to use
 >
 > Note that **NEVER** risk using experimental stuff in production environment,
 > 
-> Please point the commit you can reproduce the issue out before submit
+> Please tell us the commit you can reproduce the issue out before submit
 
 
 # Yes, I'm ready to have a try!

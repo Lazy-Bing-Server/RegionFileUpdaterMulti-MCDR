@@ -22,6 +22,7 @@ __all__ = [
     "SELF_PLUGIN_NAME_SHORT",
     "TRANSLATION_KEY_PREFIX",
     "SELF_PLUGIN_PACKAGE_PATH",
+    "MINECRAFT_DATA_API",
     "PB_LOGGER_NAME",
     "PRIME_BACKUP_ID",
     "MCDR_CFG_DECODING_KEY",
@@ -63,6 +64,8 @@ TRANSLATION_KEY_PREFIX = SELF_PLUGIN_ID + "."
 
 SELF_PLUGIN_PACKAGE_PATH = os.path.dirname(os.path.dirname(__file__))
 SELF_PLUGIN_CFG_TEMPLATE_PATH = os.path.join("resources", "default_cfg.yml")
+
+MINECRAFT_DATA_API = "minecraft_data_api"
 
 # Prime Backup CLI
 PRIME_BACKUP_ID = "prime_backup"

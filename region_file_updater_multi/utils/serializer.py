@@ -1,7 +1,6 @@
 import os
 import shutil
 from typing import List, Optional, Tuple, get_origin, Type, Any, TYPE_CHECKING
-from typing_extensions import Self
 
 from mcdreforged.api.utils import Serializable, deserialize, serialize
 from ruamel import yaml
@@ -9,8 +8,8 @@ from ruamel import yaml
 from region_file_updater_multi.mcdr_globals import *
 
 if TYPE_CHECKING:
-    from region_file_updater_multi.rfum import RegionFileUpdaterMulti
     import io
+    from region_file_updater_multi.rfum import RegionFileUpdaterMulti
 
 
 class RFUMSerializable(Serializable):

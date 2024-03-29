@@ -2,25 +2,27 @@ import json
 import os
 import re
 from logging import Logger
-from typing import Optional, Union, List, Dict, Callable
+from typing import Optional, Union, List, Dict
 
 from mcdreforged.api.all import *
 from ruamel import yaml
 
 from region_file_updater_multi.components.misc import get_rfum_comp_prefix
 from region_file_updater_multi.commands.command_manager import CommandManager
-from region_file_updater_multi.config import Config
-from region_file_updater_multi.group import GroupManager
-from region_file_updater_multi.history import History
+from region_file_updater_multi.storage.config import Config
+from region_file_updater_multi.storage.group import GroupManager
+from region_file_updater_multi.storage.history import History
 from region_file_updater_multi.mcdr_globals import *
-from region_file_updater_multi.region import RegionUpstreamManager
-from region_file_updater_multi.session import CurrentSession
+from region_file_updater_multi.region_upstream_manager import RegionUpstreamManager
+from region_file_updater_multi.update_session import UpdateSession
 from region_file_updater_multi.utils.file_utils import FileUtils
+from region_file_updater_multi.payload_executor import PayloadExecutor
 from region_file_updater_multi.utils.logging import (
     NoColorFormatter,
     attach_file_handler,
     get_datetime_format,
 )
+from region_file_updater_multi.utils.online_players import OnlinePlayers
 from region_file_updater_multi.utils.misc_tools import RFUMInstance
 from region_file_updater_multi.commands.impl import *
 
@@ -33,25 +35,28 @@ class RegionFileUpdaterMulti:
         self.__logger = self.server.logger
         RFUMInstance.set_rfum(self)
 
-        self.__file_handler = None
-        self.set_log(os.path.join(self.server.get_data_folder(), LOG_FILE))
-
         self.file_utilities = FileUtils(
             os.path.join(self.get_data_folder(), RECYCLE_BIN_FOLDER), self
         )
         Config.set_rfum(self)
         self.__verbosity = False
-        self.config: Config = self.load_config()    # type: ignore[annotation-unchecked]
-        self.__set_verbosity(self.config.get_verbosity())
-        # sself.verbose(self.config.update_operation.confirm_time_wait)
+        self.config: Config = self.load_config()  # type: ignore[annotation-unchecked]
+        self.__file_handler = None
+        if self.config.get_attach_log_handler():
+            self.set_log(os.path.join(self.server.get_data_folder(), LOG_FILE))
 
+        self.__set_verbosity(self.config.get_verbosity())
+        # self.verbose(self.config.update_operation.confirm_time_wait)
+
+        self.online_players = OnlinePlayers(self)
         self.history = History(os.path.join(self.get_data_folder(), HISTORY_FILE), self)
         self.region_upstream_manager = RegionUpstreamManager.get_instance(self)
-        self.current_session = CurrentSession(self)
+        self.current_session = UpdateSession(self)
         self.group_manager = GroupManager(
             os.path.join(self.get_data_folder(), GROUP_FILE), self
         )
 
+        self.payload_executor = PayloadExecutor(self)
         self.command_manager = CommandManager(self)
 
     def load_config(self):
@@ -213,12 +218,6 @@ class RegionFileUpdaterMulti:
             else:
                 raise
 
-    def register_event_listeners(self):
-        self.server.register_event_listener(
-            MCDRPluginEvents.PLUGIN_UNLOADED, lambda *args, **kwargs: self.unset_log()
-        )
-        self.current_session.register_event_listeners()
-
     def register_custom_translations(self):
         def translation_filter(mapping: Dict[str, str]):
             ret = {}
@@ -260,7 +259,12 @@ class RegionFileUpdaterMulti:
 
     def on_load(self, server: "PluginServerInterface", prev_module):
         self.register_custom_translations()
-        self.register_event_listeners()
+        self.server.register_event_listener(
+            MCDRPluginEvents.PLUGIN_UNLOADED, lambda *args, **kwargs: self.unset_log()
+        )
+        self.online_players.register_event_listeners()
+        self.current_session.register_event_listeners()
+        self.payload_executor.register_event_listeners()
 
         self.command_manager.add_command(HelpCommand(self))
         self.command_manager.add_command(UpstreamCommand(self))
@@ -268,6 +272,7 @@ class RegionFileUpdaterMulti:
         self.command_manager.add_command(UpdateCommand(self))
         self.command_manager.add_command(HistoryCommand(self))
         self.command_manager.add_command(DebugCommands(self))
+        self.command_manager.add_command(GroupCommand(self))
 
         self.command_manager.register()
         for pre in self.command_manager.prefixes:

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from contextlib import contextmanager
 from pathlib import Path
 from zipfile import ZipFile
-from typing import TYPE_CHECKING, Optional, List, ContextManager, TextIO
+from typing import TYPE_CHECKING, Optional, List
 
 from mcdreforged.api.utils import deserialize, serialize
 
@@ -249,7 +249,11 @@ class FileUtils:
         return folder_path
 
     def lf_read(
-        self, target_file_path: PathLike, *, is_bundled: bool = False, encoding: str = "utf8"
+        self,
+        target_file_path: PathLike,
+        *,
+        is_bundled: bool = False,
+        encoding: str = "utf8",
     ) -> str:
         if is_bundled:
             with self.__rfum.server.open_bundled_file(str(target_file_path)) as f:
@@ -278,9 +282,7 @@ class FileUtils:
         return result
 
     @contextmanager
-    def safe_write(
-        self, target_file_path: PathLike, *, encoding: str = "utf8"
-    ):
+    def safe_write(self, target_file_path: PathLike, *, encoding: str = "utf8"):
         temp_file_path = str(target_file_path) + ".tmp"
         self.delete(temp_file_path)
         with open(temp_file_path, "w", encoding=encoding) as file:

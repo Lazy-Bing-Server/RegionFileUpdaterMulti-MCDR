@@ -3,13 +3,14 @@ from region_file_updater_multi.utils.misc_tools import RFUMInstance
 from region_file_updater_multi.utils.units import Duration
 
 
+
 class DurationNode(ArgumentNode):
     def parse(self, text: str) -> ParseResult:
         result = QuotableText("##Temp").parse(text)
 
         try:
             if isinstance(text, str):
-                text = result.value.strip()     # type: ignore[union-attr]
+                text = result.value.strip()  # type: ignore[union-attr]
             else:
                 raise TypeError(result.value.__class__.__name__)
             duration = Duration(text)

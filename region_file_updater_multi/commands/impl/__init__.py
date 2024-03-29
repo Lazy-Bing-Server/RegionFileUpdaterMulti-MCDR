@@ -4,6 +4,7 @@ from region_file_updater_multi.commands.impl.add_del_command import AddDelComman
 from region_file_updater_multi.commands.impl.update_command import UpdateCommand
 from region_file_updater_multi.commands.impl.debug_commands import DebugCommands
 from region_file_updater_multi.commands.impl.history_command import HistoryCommand
+from region_file_updater_multi.commands.impl.group_command import GroupCommand
 
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     "UpdateCommand",
     "HistoryCommand",
     "DebugCommands",
+    "GroupCommand",
 ]

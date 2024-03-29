@@ -2,15 +2,17 @@ from mcdreforged.api.all import *
 import os
 
 
-from region_file_updater_multi.commands.impl.abc.complex_work_command import (
-    ComplexWorkCommand,
-)
+from region_file_updater_multi.commands.sub_command import AbstractSubCommand
 from region_file_updater_multi.commands.tree_constants import *
 from region_file_updater_multi.mcdr_globals import *
-from region_file_updater_multi.region import Region
+from region_file_updater_multi.region_upstream_manager import Region
 
 
-class DebugCommands(ComplexWorkCommand):
+class DebugCommands(AbstractSubCommand):
+    @property
+    def is_complex(self) -> bool:
+        return True
+
     @property
     def is_debug_command(self):
         return True
@@ -46,7 +48,7 @@ class DebugCommands(ComplexWorkCommand):
             allow_not_found = context.get(ANF_COUNT)
             allow_not_found = allow_not_found is not None and allow_not_found > 0
             file_path = context[TARGET_FILE]
-            if context.get(CLEAR_COUNT, 0) > 0:   # type: ignore[operator]
+            if context.get(CLEAR_COUNT, 0) > 0:  # type: ignore[operator]
                 self.rfum.file_utilities.delete(
                     os.path.join(self.rfum.get_data_folder(), DEBUG)
                 )
@@ -67,7 +69,7 @@ class DebugCommands(ComplexWorkCommand):
             allow_not_found = context.get(ANF_COUNT)
             allow_not_found = allow_not_found is not None and allow_not_found > 0
             region = Region(context[X], context[Z], context[DIM])
-            if context.get(CLEAR_COUNT, 0) > 0:    # type: ignore[operator]
+            if context.get(CLEAR_COUNT, 0) > 0:  # type: ignore[operator]
                 self.rfum.file_utilities.delete(
                     os.path.join(self.rfum.get_data_folder(), DEBUG)
                 )
