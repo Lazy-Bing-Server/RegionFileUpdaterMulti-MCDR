@@ -5,9 +5,7 @@ from typing import Tuple
 from region_file_updater_multi.components.misc import (
     get_rfum_comp_prefix,
 )
-from region_file_updater_multi.commands.impl.abc.simple_work_command import (
-    SimpleWorkCommand,
-)
+from region_file_updater_multi.commands.sub_command import AbstractSubCommand
 from region_file_updater_multi.commands.tree_constants import *
 from region_file_updater_multi.mcdr_globals import *
 from region_file_updater_multi.components.list import ListComponent
@@ -17,14 +15,18 @@ from region_file_updater_multi.upstream.impl.world_upstream import WorldSaveUpst
 from region_file_updater_multi.upstream.abstract_upstream import AbstractUpstream
 
 
-class UpstreamCommand(SimpleWorkCommand):
+class UpstreamCommand(AbstractSubCommand):
+    @property
+    def is_complex(self) -> bool:
+        return False
+
     @property
     def is_debug_command(self):
         return False
 
     def add_children_for(self, root_node: AbstractNode):
         return root_node.then(
-            self.permed_literal(UPSTREAM)
+            self.permed_literal(UPSTREAM)  # type: ignore[union-attr]
             .runs(self.display_current_upstream)
             .then(
                 self.list_command_factory(self.literal(LIST)).runs(self.list_upstream)
@@ -117,13 +119,9 @@ class UpstreamCommand(SimpleWorkCommand):
                     "[>]", RColor.dark_gray, RStyle.strikethrough
                 )
                 if invalid:
-                    cant_set_to_button.h(
-                        self.ctr(f"{LIST}.set_button.invalid_hover")
-                    )
+                    cant_set_to_button.h(self.ctr(f"{LIST}.set_button.invalid_hover"))
                 else:
-                    cant_set_to_button.h(
-                        self.ctr(f"error.already_current", name=name)
-                    )
+                    cant_set_to_button.h(self.ctr("error.already_current", name=name))
                 text.append(cant_set_to_button)
             else:
                 text.append(set_button)

@@ -91,21 +91,29 @@ class Config(ConfigurationBase):
 
     paths: Paths = Paths.get_default()
 
+    class RegionProtection(BlossomSerializable):
+        enable_group_update_permission_check: bool = True
+        check_add_groups: bool = True
+        check_del_operations: bool = False
+        permission_modify_repeat_wait_time: Duration = Duration("1m")
+        suppress_warning: bool = False
+
+    region_protection: RegionProtection = RegionProtection.get_default()
+
     class Debug(BlossomSerializable):
         verbosity: bool
         enable_debug_commands: bool
-
         popen_decoding: str
         python_executable: str
         popen_terminate_timeout: int
-
         prime_backup_log_format: List[str]
-
         thread_pool_executor_max_workers: int
-
         remove_file_while_not_found: bool
+        attach_plugin_log_handler: bool
+        lost_permission_requires_confirm: bool
+        minecraft_data_api_timeout: float
 
-    debug: Optional[Debug] = None
+    experimental: Optional[Debug] = None
 
     def validate_attribute(self, attr_name: str, attr_value: Any, **kwargs):
         if attr_name == "command_prefix":
@@ -116,7 +124,10 @@ class Config(ConfigurationBase):
                         raise ValueError("Illegal command prefix with space found")
 
     def get_debug_options(self):
-        return self.debug or self.Debug.get_default()
+        return self.experimental or self.Debug.get_default()
+
+    def get_mc_data_api_timeout(self):
+        return self.get_debug_options().get("minecraft_data_api_timeout", 3)
 
     def get_verbosity(self):
         return self.get_debug_options().get("verbosity", False)
@@ -144,6 +155,12 @@ class Config(ConfigurationBase):
 
     def get_thread_pool_executor_max_workers(self):
         return self.get_debug_options().get("thread_pool_executor_max_workers", 10)
+
+    def get_attach_log_handler(self):
+        return self.get_debug_options().get("attach_plugin_log_handler", True)
+
+    def get_lost_permission_requires_confirm(self):
+        return self.get_debug_options().get("lost_permission_requires_confirm", True)
 
     def get_remove_file_when_not_found(self):
         return self.get_debug_options().get("remove_file_while_not_found", True)

@@ -1,8 +1,7 @@
 from mcdreforged.api.all import *
 
-from region_file_updater_multi.commands.impl.abc.complex_work_command import (
-    ComplexWorkCommand,
-)
+
+from region_file_updater_multi.commands.sub_command import AbstractSubCommand
 from region_file_updater_multi.commands.tree_constants import *
 from region_file_updater_multi.components.misc import (
     get_rfum_comp_prefix,
@@ -12,18 +11,22 @@ from region_file_updater_multi.mcdr_globals import *
 from region_file_updater_multi.utils.units import Duration
 
 
-class UpdateCommand(ComplexWorkCommand):
+class UpdateCommand(AbstractSubCommand):
+    @property
+    def is_complex(self) -> bool:
+        return True
+
     @property
     def is_debug_command(self):
         return False
 
     def add_children_for(self, root_node: AbstractNode):
         def attach_update_arguments(node: Literal):
-            node.then(CountingLiteral(INSTANTLY, INSTANTLY_COUNT).redirects(node))
+            node.then(self.counting_literal(INSTANTLY, INSTANTLY_COUNT).redirects(node))
             node.then(
-                CountingLiteral(REQUIRES_CONFIRM, REQUIRES_CONFIRM_COUNT).redirects(
-                    node
-                )
+                self.counting_literal(
+                    REQUIRES_CONFIRM, REQUIRES_CONFIRM_COUNT
+                ).redirects(node)
             )
             node.then(
                 Literal(CONFIRM_TIME_WAIT).then(self.duration(DURATION).redirects(node))
@@ -58,9 +61,7 @@ class UpdateCommand(ComplexWorkCommand):
     def execute_update(self, source: CommandSource, context: CommandContext):
         if len(self.rfum.current_session.get_current_regions()) == 0:
             return source.reply(
-                get_rfum_comp_prefix(
-                    self.ctr("error.list_empty").set_color(RColor.red)
-                )
+                get_rfum_comp_prefix(self.ctr("error.list_empty").set_color(RColor.red))
             )
         if self.rfum.current_session.is_session_running:
             return source.reply(
@@ -93,7 +94,7 @@ class UpdateCommand(ComplexWorkCommand):
             raise ValueError("No region was selected")
         if instantly and requires_confirm:
             raise ValueError(
-                "Multiple mutually exclusive flags found: {INSTANTLY}, {REQUIRES_CONFIRM}"
+                f"Multiple mutually exclusive flags found: {INSTANTLY}, {REQUIRES_CONFIRM}"
             )
         if instantly or not self.config.update_operation.update_requires_confirm:
             self.rfum.verbose("Update task started without confirm")
@@ -103,23 +104,24 @@ class UpdateCommand(ComplexWorkCommand):
             return
 
         text = [
-            self.rtr(
-                f"{UPDATE}.broadcast",
+            self.ctr(
+                "broadcast",
                 len(regions),
-                self.rtr(f"{UPDATE}.list.text")
+                self.rtr(f"{LIST}.{LIST}_hint.text")
                 .c(RAction.run_command, f"{current_prefix} {LIST}")
-                .h(self.rtr(f"{UPDATE}.list.hover")),
+                .h(self.rtr(f"{LIST}.{LIST}_hint.hover")),
             ),
-            self.rtr(
-                f"{UPDATE}.make_decision", duration=get_duration_text(int(time_wait.value))
+            self.ctr(
+                "make_decision",
+                duration=get_duration_text(int(time_wait.value)),
             ),
-            self.rtr(f"{UPDATE}.{CONFIRM}_hint.text")
+            self.ctr(f"{CONFIRM}_hint.text")
             .c(RAction.run_command, f"{current_prefix} {CONFIRM}")
-            .h(self.rtr(f"{UPDATE}.{CONFIRM}_hint.hover"))
+            .h(self.ctr(f"{CONFIRM}_hint.hover"))
             + " "
-            + self.rtr(f"{UPDATE}.{ABORT}_hint.text")
+            + self.ctr(f"{ABORT}_hint.text")
             .c(RAction.run_command, f"{current_prefix} {ABORT}")
-            .h(self.rtr(f"{UPDATE}.{ABORT}_hint.hover")),
+            .h(self.ctr(f"{ABORT}_hint.hover")),
         ]
         self.server.broadcast(
             RTextBase.join("\n", [get_rfum_comp_prefix(item) for item in text])

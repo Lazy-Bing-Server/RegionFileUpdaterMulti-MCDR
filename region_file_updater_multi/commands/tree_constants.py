@@ -84,14 +84,24 @@ BLACKLIST = "blacklist"
 PROTECT = "protect"
 RELOAD = "reload"
 
+PERMISSION = "permission"
+PERM = "perm"
+CREATE = "create"
+DELETE = "delete"
+INFO = "info"
+EXPAND = "expand"
+CONTRACT = "contract"
+
+SET = "set"
+SET_DEFAULT = "set-default"
+
 # Arguments
 UPS_NAME = "upstream_name"
 GROUP_NAME = "group_name"
 NEW_GROUP_NAME = "new_group_name"
-PLAYER_TBWL = "player_to_be_whitelisted"
-PLAYER_TBBL = "player_to_be_blacklisted"
-WLED_PLAYER = "whitelisted_player"
-BLED_PLAYER = "blacklisted_player"
+PLAYER = "player"
+PERM_ENUM = "permission"
+
 X = "x"
 Z = "z"
 DIM = "dimension"
@@ -104,6 +114,9 @@ INSTANTLY_COUNT = "instantly_count"
 REQUIRES_CONFIRM = "--requires-confirm"
 REQUIRES_CONFIRM_COUNT = "requires_confirm_count"
 CONFIRM_TIME_WAIT = "--confirm-time-wait"
+CONFIRM_FLAG = "--confirm"
+CONFIRM_COUNT = "confirm_flag"
+SUPRESS_WARNING = "--suppress-warning"
 DURATION = "duration"
 
 # Debug

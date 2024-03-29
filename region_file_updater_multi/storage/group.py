@@ -1,27 +1,50 @@
+import contextlib
 import json
 import os.path
 import threading
-from typing import TYPE_CHECKING, List, Optional, overload, Iterable, Dict, Union
+from copy import deepcopy
+from dataclasses import dataclass
+from enum import Enum
+from typing import TYPE_CHECKING, List, Optional, Iterable, Dict, Union, TypeVar
 
 from mcdreforged.api.all import *
 
-from region_file_updater_multi.utils.serializer import RFUMSerializable
-from region_file_updater_multi.region import Region
+from region_file_updater_multi.region_upstream_manager import Region
 from region_file_updater_multi.mcdr_globals import CommandCallback
-
+from region_file_updater_multi.utils.misc_tools import get_player_from_src, RFUMInstance
+from region_file_updater_multi.utils.serializer import RFUMSerializable
 
 if TYPE_CHECKING:
     from region_file_updater_multi.rfum import RegionFileUpdaterMulti
 
 
+T = TypeVar("T")
+
+
+@dataclass
+class GroupPermissionItem:
+    is_admin: bool
+    is_update_allowed: bool
+
+    def get_update_allowed_flag(self):
+        config = RFUMInstance.get_rfum().config
+        return (
+            self.is_update_allowed
+            or not config.region_protection.enable_group_update_permission_check
+        )
+
+
+class GroupPermission(GroupPermissionItem, Enum):
+    admin = True, True
+    user = False, True
+    denied = False, False
+
+
 class GroupFileData(RFUMSerializable):
     name: str = ""
     regions: List[Region] = []
-    protect_regions_from_update: bool = False
-    enable_whitelist: bool = False
-    whitelist: List[str] = []
-    enable_blacklist: bool = False
-    blacklist: List[str] = []
+    default_permission: GroupPermission = GroupPermission.user
+    player_permission: Dict[str, GroupPermission] = {}
 
 
 class Group:
@@ -34,6 +57,7 @@ class Group:
         self.__manager = group_manager
         self.__data = data
         self.__lock = lock or threading.RLock()
+        self.__cached_data: Optional["GroupFileData"] = None
 
     @property
     def name(self):
@@ -44,34 +68,31 @@ class Group:
         return self.__data.regions
 
     @property
-    def whitelisted_players(self):
-        return self.__data.whitelist
-
-    @property
-    def blacklisted_players(self):
-        return self.__data.blacklist
-
-    @property
     def is_present(self):
         return self.__manager.is_present(self)
 
     @property
-    def is_protection_enabled(self):
-        return self.__data.protect_regions_from_update
+    def default_permission(self):
+        return self.__data.default_permission
 
     @property
-    def is_whitelist_enabled(self):
-        return self.__data.enable_whitelist
+    def permission_mapping(self):
+        return self.__data.player_permission
 
-    @property
-    def is_blacklist_enabled(self):
-        return self.__data.enable_blacklist
+    def get_required_perm_players(self, target_permission: GroupPermission):
+        for player, perm in self.__data.player_permission.items():
+            if perm is target_permission:
+                yield player
 
     def add_region(self, region: "Region"):
         with self.__lock:
             if self.is_listed(region):
                 return False
             self.regions.append(region)
+            if not self.requires_save:
+                RFUMInstance.get_rfum().verbose(f"{region} added and not saved")
+                return True
+            RFUMInstance.get_rfum().verbose(f"{region} added")
             return self.save()
 
     def remove_region(self, region: "Region"):
@@ -79,6 +100,8 @@ class Group:
             if not self.is_listed(region):
                 return False
             self.regions.remove(region)
+            if not self.requires_save:
+                return True
             return self.save()
 
     def is_listed(self, region: "Region"):
@@ -108,23 +131,66 @@ class Group:
             lock=lock,
         )
 
-    def is_player_whitelisted(self, player: str):
+    def get_player_permission(
+        self, player: str, default: Optional[T] = None
+    ) -> Union[GroupPermission, T]:
         with self.__lock:
-            return player in self.__data.whitelist
+            if default is None:
+                default = self.default_permission
+            return self.__data.player_permission.get(player, default)
 
-    def is_player_blacklisted(self, player: str):
+    def get_source_permission(self, source: CommandSource):
         with self.__lock:
-            return player in self.__data.blacklist
+            player = get_player_from_src(source)
+            if player is None:
+                return GroupPermission.admin
+            return self.get_player_permission(player)
 
     def is_src_permitted(self, source: CommandSource):
         with self.__lock:
-            if not isinstance(source, PlayerCommandSource):
+            return self.get_source_permission(source).is_update_allowed
+
+    def is_src_admin(self, source: CommandSource):
+        with self.__lock:
+            return self.get_source_permission(source).is_admin
+
+    def set_permission(self, player: str, permission: GroupPermission):
+        with self.__lock:
+            self.__data.player_permission[player] = permission
+            if not self.requires_save:
                 return True
-            if not self.__data.protect_regions_from_update:
+            return self.save()
+
+    def remove_permission(self, player: str):
+        with self.__lock:
+            if player not in self.__data.player_permission.keys():
+                return False
+            del self.__data.player_permission[player]
+            if not self.requires_save:
                 return True
-            return self.is_player_whitelisted(
-                source.player
-            ) and not self.is_player_blacklisted(source.player)
+            return self.save()
+
+    def set_default_permission(self, permission: GroupPermission):
+        with self.__lock:
+            self.__data.default_permission = permission
+            if not self.requires_save:
+                return True
+            return self.save()
+
+    @contextlib.contextmanager
+    def keep_modify_context(self):
+        with self.__lock:
+            self.__cached_data = self.__data
+            self.__data = deepcopy(self.__data)
+            try:
+                yield
+            finally:
+                self.__data = self.__cached_data
+                self.__cached_data = None
+
+    @property
+    def requires_save(self):
+        return self.__cached_data is None
 
 
 class GroupManager:
@@ -134,6 +200,10 @@ class GroupManager:
         self.__rfum = rfum
         self.__groups: Dict[str, Group] = {}
         self.load()
+
+    @property
+    def groups(self):
+        return self.__groups
 
     def is_present(self, group: Union[str, Group]):
         with self.__lock:
@@ -166,15 +236,19 @@ class GroupManager:
 
     def save(self) -> bool:
         with self.__lock:
-            data_list = [group.get_data(self) for group in self.__groups.values()]
+            data_list = map(lambda group: group.get_data(self), self.__groups.values())
             if os.path.isdir(self.__path):
                 os.removedirs(self.__path)
             try:
                 with open(self.__path, "w", encoding="utf8") as f:
-                    json.dump(serialize(data_list), f, ensure_ascii=False, indent=4)
+                    json.dump(
+                        serialize(list(data_list)), f, ensure_ascii=False, indent=4
+                    )
             except (KeyError, ValueError):
                 self.__rfum.logger.exception("Saving group file failed")
                 return False
+            else:
+                self.__rfum.verbose("Saved group file")
             return True
 
     def get_group(self, name: str):
@@ -202,12 +276,17 @@ class GroupManager:
     def get_group_by_region(self, region: Region) -> Iterable[Group]:
         for group in self.__groups.values():
             if group.is_listed(region):
+                self.__rfum.verbose(f"{region} included in {group.name}")
                 yield group
 
-    def is_region_permitted(self, source: CommandSource, region: Region):
-        return all(
-            [
-                group.is_src_permitted(source)
-                for group in self.get_group_by_region(region)
-            ]
+    def get_update_denied_groups(self, source: CommandSource, region: Region):
+        return filter(
+            lambda group: not group.is_src_permitted(source),
+            self.get_group_by_region(region),
         )
+
+    def is_region_permitted(self, source: CommandSource, region: Region):
+        return len(list(self.get_update_denied_groups(source, region))) == 0
+
+    def is_region_included(self, region: Region):
+        return len(list(self.get_group_by_region(region))) > 0

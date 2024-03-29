@@ -1,10 +1,23 @@
 import datetime
 
 from mcdreforged.api.rtext import *
-from typing import Union, Iterable
+from typing import Union, Iterable, TYPE_CHECKING
 
 from region_file_updater_multi.mcdr_globals import *
 from region_file_updater_multi.utils.misc_tools import RFUMInstance
+from region_file_updater_multi.utils.units import Duration
+
+if TYPE_CHECKING:
+    from region_file_updater_multi.storage.group import GroupPermission
+
+
+class PlayerNameString(str):
+    @property
+    def possessive(self):
+        if self.endswith("s"):
+            return self + "'"
+        else:
+            return self + "'s"
 
 
 def get_rfum_comp_prefix(*args, divider: MessageText = ""):
@@ -25,8 +38,11 @@ def attach_prefix_to_each_lines(lines: Iterable[MessageText]):
 
 # TODO: combine this to units, so this is a temp solution (also a piece of sh*t)
 # This is not the same as TISUnion/Seen, it's a new wheel xD
-def get_duration_text(value: int):
-    value = int(value)
+def get_duration_text(raw_value: Union[int, Duration]):
+    if isinstance(raw_value, Duration):
+        value = raw_value.value
+    else:
+        value = int(raw_value)
     rfum = RFUMInstance.get_rfum()
     color_num, color_unit = RColor.dark_aqua, RColor.dark_purple
     if value == 0:
@@ -64,3 +80,12 @@ def datetime_tr(time: Union[int, float, datetime.datetime, None] = None):
     if isinstance(time, datetime.datetime):
         time = time.timestamp()
     return RTextMCDRTranslation(str(time)).set_translator(__tr)
+
+
+def group_perm_tr(key: Union["GroupPermission", str]):
+    if not isinstance(key, str):
+        key_string = key.name
+    else:
+        key_string = str(key)
+    key_string = f"group_permission.{key_string}"
+    return RFUMInstance.get_rfum().rtr(key_string)

@@ -1,8 +1,6 @@
 from mcdreforged.api.all import *
 
-from region_file_updater_multi.commands.impl.abc.simple_work_command import (
-    SimpleWorkCommand,
-)
+from region_file_updater_multi.commands.sub_command import AbstractSubCommand
 from region_file_updater_multi.commands.tree_constants import *
 from region_file_updater_multi.components.list import ListComponent
 from region_file_updater_multi.components.misc import (
@@ -12,7 +10,11 @@ from region_file_updater_multi.components.misc import (
 from region_file_updater_multi.mcdr_globals import *
 
 
-class HistoryCommand(SimpleWorkCommand):
+class HistoryCommand(AbstractSubCommand):
+    @property
+    def is_complex(self) -> bool:
+        return False
+
     @property
     def is_debug_command(self):
         return False
@@ -89,7 +91,7 @@ class HistoryCommand(SimpleWorkCommand):
             self.rtr(f"{HISTORY}.{LIST}.title"),
             get_rfum_comp_prefix(self.rtr(f"{HISTORY}.{LIST}.amount", len(regions))),
         ]
-        list_text = list_comp.get_page_rtext(page, item_per_page)
+        list_text = list_comp.get_page_rtext(page, item_per_page=item_per_page)
         if list_text is not None:
             text.append(list_text)
         text.append(

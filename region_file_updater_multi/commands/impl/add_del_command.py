@@ -1,45 +1,58 @@
+import time
+
 from mcdreforged.api.all import *
 
-from typing import Tuple, Union, Optional
+from typing import Tuple, Optional
 
 from region_file_updater_multi.components.misc import (
     get_rfum_comp_prefix,
 )
-from region_file_updater_multi.commands.impl.abc.complex_work_command import (
-    ComplexWorkCommand,
-)
+from region_file_updater_multi.commands.sub_command import AbstractSubCommand
 from region_file_updater_multi.commands.tree_constants import *
 from region_file_updater_multi.mcdr_globals import *
 from region_file_updater_multi.utils import misc_tools
 from region_file_updater_multi.components.list import ListComponent
-from region_file_updater_multi.region import Region
-
-from minecraft_data_api import get_player_coordinate, get_player_dimension
+from region_file_updater_multi.region_upstream_manager import Region
 
 
-class AddDelCommand(ComplexWorkCommand):
+class AddDelCommand(AbstractSubCommand):
+    @property
+    def is_complex(self) -> bool:
+        return True
+
     @property
     def is_debug_command(self):
         return False
 
     def add_children_for(self, root_node: AbstractNode):
+        def attach_supress_warning(node: AbstractNode):
+            return node.then(
+                self.counting_literal(SUPRESS_WARNING, SUPRESS_WARNING).redirects(node)
+            )
+
         builder = SimpleCommandBuilder()
         builder.command(ADD, self.add_region_by_player_pos)
+        builder.command(f"{ADD} {SUPRESS_WARNING}", self.add_region_by_player_pos)
+        builder.command(f"{ADD} {GROUP} <{GROUP_NAME}>", self.group_add_region)
         builder.command(
-            f"{ADD} <{X}> <{Z}> <{DIM}>",
-            lambda src, ctx: self.add_region(src, ctx[X], ctx[Z], ctx[DIM]),
+            f"{ADD} {GROUP} <{GROUP_NAME}> {SUPRESS_WARNING}", self.group_add_region
         )
+        builder.command(f"{ADD} <{X}> <{Z}> <{DIM}>", self.add_region)
+        builder.command(f"{ADD} <{X}> <{Z}> <{DIM}> {SUPRESS_WARNING}", self.add_region)
+
         builder.command(DEL, self.del_region_with_player_pos)
-        builder.command(
-            f"{DEL} <{X}> <{Z}> <{DIM}>",
-            lambda src, ctx: self.del_region(src, ctx[X], ctx[Z], ctx[DIM]),
-        )
+        builder.command(f"{DEL} {GROUP} <{GROUP_NAME}>", self.group_del_region)
+        builder.command(f"{DEL} <{X}> <{Z}> <{DIM}>", self.del_region)
 
         builder.literal(ADD, self.permed_literal)
         builder.literal(DEL, self.permed_literal)
+        builder.literal(
+            SUPRESS_WARNING, lambda name: self.counting_literal(name, SUPRESS_WARNING)
+        )
         self.set_builder_coordinate_args(
             builder, x_f=self.integer, z_f=self.integer, d_f=self.quotable_text
         )
+        builder.arg(GROUP_NAME, self.quotable_text).post_process(attach_supress_warning)
 
         builder.command(DEL_ALL, self.del_all_region)
         builder.literal(DEL_ALL, self.permed_literal)
@@ -48,25 +61,143 @@ class AddDelCommand(ComplexWorkCommand):
         builder.literal(LIST, self.permed_literal).post_process(
             self.list_command_factory
         )
-
         builder.add_children_for(root_node)
+
+    def __batch_add_region(
+        self,
+        source: CommandSource,
+        current_prefix: str,
+        *regions: Region,
+        supress_warning: bool = False,
+    ):
+        if self.is_session_running(source):
+            return
+        current_session = self.rfum.current_session
+
+        succeeded, failed = [], []
+        for region in regions:
+            if region in current_session.get_current_regions().keys():
+                failed.append(region)
+            elif (
+                self.config.region_protection.check_add_groups
+                and self.rfum.group_manager.is_region_permitted(source, region)
+            ):
+                failed.append(region)
+            else:
+                self.reply_warning(source, region, supress_warning)
+                current_session.add_region(
+                    region, misc_tools.get_player_from_src(source)
+                )
+                succeeded.append(region)
+        source.reply(
+            get_rfum_comp_prefix(
+                self.ctr("batch_add", succeeded=len(succeeded), failed=len(failed)),
+                self.rtr(f"{LIST}.{LIST}_hint.text")
+                .c(RAction.run_command, f"{current_prefix} {LIST}")
+                .h(self.rtr(f"{LIST}.{LIST}_hint.hover")),
+                divider=" ",
+            )
+        )
+
+    def __batch_del_batch(
+        self, source: CommandSource, current_prefix: str, *regions: Region
+    ):
+        if self.is_session_running(source):
+            return
+        current_session = self.rfum.current_session
+        succeeded, failed = [], []
+        for region in regions:
+            if region not in current_session.get_current_regions().keys():
+                failed.append(region)
+            elif (
+                self.config.region_protection.check_add_groups
+                and self.config.region_protection.check_del_operations
+                and self.rfum.group_manager.is_region_permitted(source, region)
+            ):
+                failed.append(region)
+            else:
+                current_session.remove_region(
+                    region, misc_tools.get_player_from_src(source)
+                )
+                succeeded.append(region)
+        source.reply(
+            get_rfum_comp_prefix(
+                self.ctr("batch_del", succeeded=len(succeeded), failed=len(failed)),
+                self.rtr(f"{LIST}.{LIST}_hint.text")
+                .c(RAction.run_command, f"{current_prefix} {LIST}")
+                .h(self.rtr(f"{LIST}.{LIST}_hint.hover")),
+                divider=" ",
+            )
+        )
+
+    def group_add_region(self, source: CommandSource, context: CommandContext):
+        current_prefix = context.command.split(" ")[0]
+        group_name = context[GROUP_NAME]
+        group = self.rfum.group_manager.get_group(group_name)
+        if group is None:
+            return source.reply(
+                self.rtr(f"{GROUP}.error.not_found", group_name).set_color(RColor.red)
+            )
+        self.__batch_add_region(source, current_prefix, *group.regions)
+
+    def group_del_region(self, source: CommandSource, context: CommandContext):
+        current_prefix = context.command.split(" ")[0]
+        group_name = context[GROUP_NAME]
+        if not self.rfum.group_manager.is_present(group_name):
+            return source.reply(
+                self.rtr(f"{GROUP}.error.not_found", group_name).set_color(RColor.red)
+            )
+        regions = self.rfum.group_manager.get_group(group_name)
+        self.__batch_del_batch(source, current_prefix, *regions)
 
     @property
     def tr_key_prefix(self):
         return TRANSLATION_KEY_PREFIX + f"command.{ADD}_{DEL}."
 
-    @staticmethod
-    def get_region_from_player(player: str):
-        coord = get_player_coordinate(player)
-        dim = get_player_dimension(player)
-        return Region.from_player_coordinates(coord.x, coord.z, str(dim))
+    def get_ctx_supress_warning(self, context: CommandContext):
+        return self.get_ctx_flag(context, SUPRESS_WARNING)
+
+    def reply_warning(
+        self, source: CommandSource, region: Region, supress_warning: bool
+    ):
+        if supress_warning:
+            return
+        groups = list(self.rfum.group_manager.get_group_by_region(region))
+        if len(groups) <= 0:
+            return
+        head = groups[:3] if len(groups) > 3 else groups
+        head_text = "§f, §r".join([f"§b{item.name}§r" for item in head])
+        if len(groups) > 3:
+            head_text += "..."
+        source.reply(
+            get_rfum_comp_prefix(
+                self.ctr("group_warning", region).set_color(RColor.yellow),
+                get_rfum_comp_prefix(head_text),
+                get_rfum_comp_prefix(
+                    self.ctr("warn_count", len(groups)).set_color(RColor.yellow)
+                ),
+                divider="\n",
+            )
+        )
 
     # !!rfum add
-    def __add_region(self, source: CommandSource, region: Region):
+    def __add_region(
+        self, source: CommandSource, region: Region, supress_warning: bool = False
+    ):
         if self.is_session_running(source):
             return
         if region in self.rfum.current_session.get_current_regions().keys():
             return source.reply(get_rfum_comp_prefix(self.ctr("existed", str(region))))
+        denied = list(self.rfum.group_manager.get_update_denied_groups(source, region))
+        self.verbose("Banned by: " + str([g.name for g in denied]))
+        if len(denied) > 0:
+            self.verbose(f"Source {get_rfum_comp_prefix(source)} perm denied")
+            return source.reply(
+                get_rfum_comp_prefix(self.command_manager.perm_denied_text_getter())
+            )
+        self.verbose(f"Source {misc_tools.get_player_from_src(source)} allowed")
+        self.reply_warning(source, region, supress_warning)
+        time.sleep(0.01)
         self.rfum.current_session.add_region(
             region, misc_tools.get_player_from_src(source)
         )
@@ -74,13 +205,21 @@ class AddDelCommand(ComplexWorkCommand):
 
     def add_region_by_player_pos(self, source: CommandSource):
         if not isinstance(source, PlayerCommandSource):
-            return source.reply(get_rfum_comp_prefix(self.ctr("error.not_a_player")))
+            return source.reply(
+                get_rfum_comp_prefix(
+                    self.ctr("error.not_a_player").set_color(RColor.red)
+                )
+            )
         self.__add_region(
             source, self.get_region_from_player(misc_tools.get_player_from_src(source))
         )
 
-    def add_region(self, source: CommandSource, x: int, z: int, dim: Union[int, str]):
-        self.__add_region(source, Region(x, z, str(dim)))
+    def add_region(self, source: CommandSource, context: CommandContext):
+        self.__add_region(
+            source,
+            Region(*self.get_ctx_coordinates(context)),
+            supress_warning=self.get_ctx_supress_warning(context),
+        )
 
     # !!rfum del
     def __del_region(self, source: CommandSource, region: Region):
@@ -90,18 +229,31 @@ class AddDelCommand(ComplexWorkCommand):
             return source.reply(
                 get_rfum_comp_prefix(self.ctr("not_added", str(region)))
             )
-        self.rfum.current_session.remove_region(region)
+        if (
+            self.config.region_protection.check_del_operations
+            and not self.rfum.group_manager.is_region_permitted(source, region)
+        ):
+            return source.reply(
+                get_rfum_comp_prefix(self.command_manager.perm_denied_text_getter())
+            )
+        self.rfum.current_session.remove_region(
+            region, misc_tools.get_player_from_src(source)
+        )
         source.reply(get_rfum_comp_prefix(self.ctr("removed", str(region))))
 
     def del_region_with_player_pos(self, source: CommandSource):
         if not isinstance(source, PlayerCommandSource):
-            return source.reply(get_rfum_comp_prefix(self.ctr("error.not_a_player")))
+            return source.reply(
+                get_rfum_comp_prefix(
+                    self.ctr("error.not_a_player").set_color(RColor.red)
+                )
+            )
         self.__del_region(
             source, self.get_region_from_player(misc_tools.get_player_from_src(source))
         )
 
-    def del_region(self, source: CommandSource, x: int, z: int, dim: Union[int, str]):
-        self.__del_region(source, Region(x, z, str(dim)))
+    def del_region(self, source: CommandSource, context: CommandContext):
+        self.__del_region(source, Region(*self.get_ctx_coordinates(context)))
 
     # !!rfum del-all
     def del_all_region(self, source: CommandSource):

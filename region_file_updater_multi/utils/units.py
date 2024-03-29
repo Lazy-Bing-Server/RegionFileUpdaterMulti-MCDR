@@ -91,11 +91,11 @@ class _UnitValueBase(Generic[T], str, ABC):
     @classmethod
     def _auto_format(cls, val: T) -> UnitValuePair:
         if val < 0:  # type: ignore[operator]
-            uvp = cls._auto_format(-val)    # type: ignore[operator]
+            uvp = cls._auto_format(-val)  # type: ignore[operator]
             return UnitValuePair(-uvp.value, uvp.unit)
         ret = None
         for unit, k in cls._get_formatting_unit_map().items():
-            x = cls.__precise_div(val, k)   # type: ignore[arg-type]
+            x = cls.__precise_div(val, k)  # type: ignore[arg-type]
             if x >= 1 or ret is None:
                 if isinstance(x, float) and x.is_integer():
                     x = int(x)
@@ -108,16 +108,16 @@ class _UnitValueBase(Generic[T], str, ABC):
 
     @classmethod
     def _precise_format(cls, val: T) -> UnitValuePair:
-        if val < 0:     # type: ignore[operator]
-            uvp = cls._auto_format(-val)    # type: ignore[operator]
+        if val < 0:  # type: ignore[operator]
+            uvp = cls._auto_format(-val)  # type: ignore[operator]
             return UnitValuePair(-uvp.value, uvp.unit)
 
         units = list(reversed(cls._get_formatting_unit_map().items()))
         if val == 0:
-            return UnitValuePair(val, units[-1][0])     # type: ignore[arg-type]
+            return UnitValuePair(val, units[-1][0])  # type: ignore[arg-type]
         for i, tp in enumerate(units):  # high -> low
             unit, k = tp
-            x = cls.__precise_div(val, k)   # type: ignore[arg-type]
+            x = cls.__precise_div(val, k)  # type: ignore[arg-type]
             if (
                 isinstance(x, int)
                 or (isinstance(x, float) and x.is_integer())

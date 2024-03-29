@@ -33,7 +33,8 @@ class RFUMInstance:
 
 def capitalize(string: str) -> str:
     char_list = list(string)
-    char_list[0] = char_list[0].upper()
+    if len(char_list) > 0:
+        char_list[0] = char_list[0].upper()
     return "".join(char_list)
 
 
@@ -136,11 +137,10 @@ AnyScheduler = TypeVar("AnyScheduler", bound=BaseScheduler)
 
 def get_scheduler(
     scheduler_cls: Type[AnyScheduler] = BackgroundScheduler,
+    prefix: str = "SessionScheduler",
 ) -> AnyScheduler:
     scheduler = scheduler_cls()
     scheduler.add_executor(
-        get_thread_pool_executor(
-            is_apscheduler=True, thread_name_prefix="SessionScheduler"
-        )
+        get_thread_pool_executor(is_apscheduler=True, thread_name_prefix=prefix)
     )
     return scheduler

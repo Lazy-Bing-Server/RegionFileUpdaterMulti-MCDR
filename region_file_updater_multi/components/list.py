@@ -50,7 +50,7 @@ class ListComponent(Generic[T]):
         if tail_index >= self.length:
             tail_index = self.length
         RFUMInstance.get_rfum().verbose(f"Page: {page} Item per page: {item_per_page}")
-        RFUMInstance.get_rfum().verbose(f"Tail: {tail_index} Head: {head_index}")
+        RFUMInstance.get_rfum().verbose(f"Head: {head_index} Tail: {tail_index}")
         return head_index, tail_index
 
     def get_page_rtext(

@@ -2,7 +2,6 @@ import enum
 import os
 import threading
 from typing import Iterable, TYPE_CHECKING, Dict, Optional, Type, Tuple
-from dataclasses import dataclass
 
 from region_file_updater_multi.upstream.abstract_upstream import AbstractUpstream
 from region_file_updater_multi.upstream.impl.world_upstream import WorldSaveUpstream
@@ -14,14 +13,27 @@ from region_file_updater_multi.utils.file_utils import RFUMFileNotFound
 
 if TYPE_CHECKING:
     from region_file_updater_multi.rfum import RegionFileUpdaterMulti
-    from region_file_updater_multi.config import Config
+    from region_file_updater_multi.storage.config import Config
 
 
-@dataclass(unsafe_hash=False)
 class Region:
-    x: int
-    z: int
-    dim: str
+    x: Optional[int]
+    z: Optional[int]
+    dim: Optional[str]
+
+    def __init__(
+        self,
+        x: Optional[int] = None,
+        z: Optional[int] = None,
+        dim: Optional[str] = None,
+    ):
+        self.x = x
+        self.z = z
+        self.dim = str(dim) if dim is not None else None
+
+    def assert_valid(self):
+        if self.x is None or self.z is None or self.dim is None:
+            raise ValueError("Value not initiated")
 
     @classmethod
     def from_player_coordinates(cls, x: float, z: float, dim: str):
@@ -31,6 +43,7 @@ class Region:
         return "r.{}.{}.mca".format(self.x, self.z)
 
     def to_file_list(self, config: "Config"):
+        self.assert_valid()
         file_list = []
         folders = config.paths.dimension_region_folder[str(self.dim)]
         if isinstance(folders, str):
@@ -43,12 +56,19 @@ class Region:
         return file_list
 
     def __eq__(self, other):
+        self.assert_valid()
         if not isinstance(other, type(self)):
             return False
-        return self.x == other.x and self.z == other.z and self.dim == other.dim
+        return (
+            self.x == other.x and self.z == other.z and str(self.dim) == str(other.dim)
+        )
 
     def __hash__(self):
+        self.assert_valid()
         return hash((self.x, self.z, self.dim))
+
+    def __repr__(self):
+        return "Region[x={}, z={}, dim={}]".format(self.x, self.z, self.dim)
 
 
 class UpstreamType(enum.Enum):

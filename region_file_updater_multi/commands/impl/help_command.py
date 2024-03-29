@@ -4,14 +4,16 @@ from region_file_updater_multi.components.misc import (
     get_rfum_comp_prefix,
     get_duration_text,
 )
-from region_file_updater_multi.commands.impl.abc.simple_work_command import (
-    SimpleWorkCommand,
-)
+from region_file_updater_multi.commands.sub_command import AbstractSubCommand
 from region_file_updater_multi.mcdr_globals import *
 from region_file_updater_multi.commands.tree_constants import *
 
 
-class HelpCommand(SimpleWorkCommand):
+class HelpCommand(AbstractSubCommand):
+    @property
+    def is_complex(self) -> bool:
+        return False
+
     @property
     def is_debug_command(self):
         return False
@@ -69,13 +71,11 @@ class HelpCommand(SimpleWorkCommand):
         current_prefix = context.command.split(" ")[0]
         command = f"{current_prefix} {ADD}/{DEL}/{DEL_ALL}"
         text = [
-            # self.rtr('upstream.help.current', self.rfum.region_manager.get_current_upstream().name),
             self.rtr("help.single_help_title", pre=command),
             self.rtr(f"{ADD}_{DEL}.help.desc"),
             self.rtr("help.usage_title"),
-            # self.rtr('help.command_omitted', pre=command),
-            self.rfum.htr(
-                "command.add_del.help.usage",
+            self.htr(
+                f"command.{ADD}_{DEL}.help.usage",
                 pre=current_prefix,
                 add=ADD,
                 del_=DEL,
@@ -91,7 +91,6 @@ class HelpCommand(SimpleWorkCommand):
         current_prefix = context.command.split(" ")[0]
         command = f"{current_prefix} {LIST}"
         text = [
-            # self.rtr('upstream.help.current', self.rfum.region_manager.get_current_upstream().name),
             self.rtr("help.single_help_title", pre=command),
             self.rtr(f"{LIST}.help.desc"),
             self.rtr("help.usage_title"),
