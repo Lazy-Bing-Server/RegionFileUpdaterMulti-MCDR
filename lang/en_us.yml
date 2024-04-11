@@ -124,14 +124,24 @@ region_file_updater_multi:
           §7expand §b<group>§6 <x> <z> <dim> §r Add a region to a group
           §7contract §b<group>§r Remove current region a from a group
           §7contract §b<group>§6 <x> <z> <dim> §r Remove a region from a group
-          §7protect §b<group>§e enable§7 |§e disable§r
-          Allow/forbid regions in group to be updated by anyone
-          §7whitelist §b<group>§e append§7 |§e remove§7 |§e enable§7 |§e disable§7 |§e list
-          §7blacklist §b<group>§e append§7 |§e remove§7 |§e enable§7 |§e disable§7 |§e list§r
+          §7perm§8ission §b<group>§e list§r List all player permission
+          §7perm§8ission §b<group>§e set§5 <player> §6<level>§r
+          Set a player permission for a group
+          §7perm§8ission §b<group>§e del§5 <player> §r
+          Delete a player permission for a group
+          §7perm§8ission §b<group>§e set-default§6 <level>§r
+          Set default permission level for player has no permission set
+
         list_usage: |
           Manage whitelist/blacklist of the groups, these lists protects:
           §8- §rGroup modification
           §8- §rUnauthorized region update (§7when protection enabled§r)
+        permission_title: "§d[Group permission levels]§r"
+        permission_levels: |
+          Permission level could be following levels:
+          §cdenied§r: All operations to groups are forbidden
+          §euser§r: Only update regions in groups are allowed
+          §aadmin§r: Allow all modification operations
       error:
         perm_not_found: Permission for player {} not found
         not_found: Group "{}" not found
@@ -160,6 +170,7 @@ region_file_updater_multi:
       requires_confirm_2: §eRepeat the command to confirm doing this in {}
       confirm_timeout: Confirm timed out, there's no change to permission
       deleted_perm: "§dDeleted§r player §6{player.possessive}§r permission in group §b{group}§r"
+
 
 
       perm_list:
@@ -226,10 +237,10 @@ region_file_updater_multi:
       executed_at: §6{player}§r executed at §e{time}§r
 
       result:
-        title: §d§lLast update result:§r
+        title: §7========§r Last update result §7========§r
         executor: "Executor: §6{}§r"
         time: "Last update time: §e{}§r"
-        status: "Status: {}"
+        status: "Result: {}"
         upstream: "Upstream: §3{}§r"
         region_amount: 'Region count: §3{count}§r {button}'
         list_region_button: §b[Region list]§r

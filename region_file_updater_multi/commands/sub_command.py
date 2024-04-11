@@ -196,7 +196,7 @@ class AbstractSubCommand(ABC):
         return self.get_threaded_node(Enumeration)
 
     @property
-    def counting_literal(self):
+    def counting_literal(self) -> Type[CountingLiteral]:
         return self.get_threaded_node(CountingLiteral)
 
     def register_event_listeners(self) -> Any:

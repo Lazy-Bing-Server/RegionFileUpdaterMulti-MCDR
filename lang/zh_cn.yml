@@ -1,0 +1,306 @@
+region_file_updater_multi:
+  help_message:
+    mcdr: '自多个上游更新区域文件'
+    suggest: 点击以填入命令 §7{}§r
+
+  error_message:
+    unexpected: 未知异常
+
+  command:
+    help:
+      overview: |
+        §7=====§r §5{plugin_name}§r §6v{version}§r §7======§r
+        自指定上游更新区域文件的插件
+        支持多个上游和 §3Prime Backup§r 数据库
+        §d【指令概览】§r
+        §7{pre} {help}§e <指令>§r 获取各指令的详细帮助
+        §7{pre} {add} §r添加区域到更新列表
+        §7{pre} {del_} §r自更新列表移除区域
+        §7{pre} {del_all} §r移除所有要更新的区域
+        §7{pre} {list} §r列出更新列表中的区域
+        §7{pre} {update} §r重启服务端并更新选定区域
+        §7{pre} {history} §r查询上次更新的结果
+        §7{pre} {upstream}§r 查询并选择更新的上游
+        §7{pre} {group} §r管理区域组
+        §7{pre} {reload} §r重载插件
+        §d【小贴士】§r
+        切换上游功能可帮助您从多个不同的存档或 §3Prime Backup§r 数据库更新区域文件
+        §9区域组§r功能可帮助您记忆常用区域或防止这些区域意外更新
+
+      detailed: |
+      single_help_title: 指令 §7{pre}§r 帮助信息
+      usage_title: §d【指令用法】§r
+      command_omitted: 下方指令均已忽略前缀 §7{pre}§r
+      arguments_title: §d【参数】§r
+      optional_flags_title: §d【可选条件】§r  # 暂时没用到
+      optional_arguments_title: §d【可选参数】§r
+      list_opt_args: |
+        §3[参数]§r 可以是如下参数: 
+        §7--page§6 <页码>§r 指定列表的页码
+        §7--per-page§b <单页个数>§r 指定每页的个数, 默认为 §b{default_count}§r
+
+    error_message:
+      permission_denied: 权限不足
+      invalid_duration: 无效的时长值
+      unexpected: 未知异常
+      session_running: 不允许变更正在运行的会话
+      exclusive_flags: 条件互斥
+
+
+    reload:
+      reloading: §d正在重载§r本插件  # 暂时没用到
+      reloaded: 插件§d已重载§r
+      error: "§c出现意外错误: {}§r"
+
+    list:
+      help:
+        desc: 查询已添加到更新列表中区域的指令
+        usage: |
+          §7{pre} {list}§3 [参数]§r 列出所有区域
+      prev_button:
+        hover: 点击浏览上一页
+      next_button:
+        hover: 点击浏览下一页
+      error:
+        page_index_out_of_range: 页码超限
+      line:
+        del_hover: 点击以自当前更新列表中§d移除§r该区域文件
+        add_hover: 由 §6{}§r 添加
+      title:
+        text: "§7========§r 区域列表 §7========§r"
+        add_hover: 点击§d添加§r其他区域
+      amount: "已添加 §3{amount}§r 个区域: {add}"
+      list_hint:
+        text: "[§d显示区域列表§r]"
+        hover: 点击以显示§d区域列表§r
+
+
+    upstream:
+      help:
+        desc: 使用指令 §7{pre}§r 来查询或切换要从其中更新区域文件的上游
+        usage: |
+          §7{list}§3 [参数]§r 列出所有上游
+          §7set §e<{upstream_name}>§r 设置当前上游
+      status:
+        current: "当前上游: §9§l{}§r"
+        more_detail: §7{pre} help {upstream}§r 获取详细的 §7{upstream}§r 指令帮助信息
+      error:
+        not_found: 上游 "{}" 不存在
+        already_current: "§9§l{name}§r 已经是当前上游了"
+
+      list:
+        title: §7========§r 上游列表 §7========§r
+        total_count: "总共 §5{all}§r 个上游, §d{valid}§r 个有效:"
+        ups_prefix:
+          pb_hover: §3Prime backup§r 数据库上游
+          ws_hover: §6世界存档§r上游
+        set_button:
+          hover: 点击将当前上游设置为 {}
+          invalid_hover: "§c这是一个无效的上游"
+
+        fail_msg: "§c出现错误: {}§r"
+        current: §b§l{}§r 是当前的上游
+      set:
+        fail: '设置当前上游为 "{upstream}" 失败: {exc}'
+        success: '设置当前上游为 §9§l{upstream}§r 成功'
+
+    group:
+      help:
+        overview: |
+          §7{pre} {help} {group}§r 显示详细的该指令帮助信息
+        desc: 使用指令 §7{pre}§r 来管理区域组
+        usage: |
+          §7{list}§3 [参数]§r 列出所有的组
+          §7info §b<组>§r 显示一个组的详细信息
+          §7create §b<组>§r 创建新组
+          §7delete §b<组>§r 删除指定的既有组
+          §7expand §b<组>§r 添加玩家当前区域到指定组里
+          §7expand §b<组>§6 <x> <z> <维度> §r 添加一个区域到指定组
+          §7contract §b<组>§r 自一个组移除玩家当前区域
+          §7contract §b<组>§6 <x> <z> <dim> §r 自指定组移除一个区域
+          §7perm§8ission §b<组>§e list§r 列出指定组的所有玩家权限
+          §7perm§8ission §b<组>§e set§5 <玩家> §6<等级>§r
+          设定一个玩家在指定的组中的权限
+          §7perm§8ission §b<组>§e del§5 <玩家> §r
+          删除一个玩家在指定的组中的权限
+          §7perm§8ission §b<组>§e set-default§6 <等级>§r
+          设定指定组中未设置权限的玩家的默认权限
+
+        list_usage: |   # unused
+          Manage whitelist/blacklist of the groups, these lists protects:
+          §8- §rGroup modification
+          §8- §rUnauthorized region update (§7when protection enabled§r)
+        permission_title: "§d【组内权限等级】§r"
+        permission_levels: |
+          权限等级可以为以下值: 
+          §cdenied§r: 禁止对该组的一切操作
+          §euser§r: 仅允许更新该组中区域
+          §aadmin§r: 允许对该组的所有变更和区域更新操作
+      error:
+        perm_not_found: 未为玩家 {} 设定权限
+        not_found: 组 "{}" 不存在
+        unknown: 未知错误
+        already_exists: 组 "{}" 已存在
+        already_enabled: 指定项已经启用过了
+        already_disabled: 指定项已经禁用过了
+        region_exists: 区域 §b{region}§r 已包含在组 §3{group}§r 中了
+        region_not_found: 区域 §b{region}§r 不在组 §3{group}§r 中
+      created: 已创建组 §b{}§r
+      deleted: 已删除组 §b{}§r
+      expanded: §d已添加§r区域 §b{region}§r 到组 §3{group}§r
+      contracted: §d已移除§r组 §3{group}§r 中的区域 §b{region}§r
+      info:
+        title: 组 §b§l{}§r 的详细信息
+        regions: "总区域数: §3{count}§r {hint}"
+        default_perm: "默认权限等级: {}"
+        detailed_perm: ">> 权限等级详情 <<"
+      list:
+        line_hover: 点此查阅组 §b{}§r 详情
+        title: "§7========§r 区域组列表 §7========§r"
+        create_hover: "点击§6创建§r一个新组"
+        amount: "总共有 §3{}§r 个组: "
+      set: "§d已设定§r玩家 §6{player}§r 在组 §b{group}§r 中的权限为 {perm}"
+      requires_confirm_1: §e该操作将褫夺您的管理员权限!!!
+      requires_confirm_2: §e请在 {} 内重复该指令以确认该操作
+      confirm_timeout: 确认超时, 未对权限作任何变更
+      deleted_perm: "§d已删除§r玩家 §6{player}§r 在组 §b{group}§r 中的权限设定"
+
+
+
+      perm_list:
+        title: "§7======§r 权限列表 §7======§r"
+        amount: "组 §b{group}§r 记录了 §3{count}§r 条玩家权限信息:"
+        edit_hover: 点击以§d变更§r玩家 {player} 在组 {group} 中的权限等级
+        del_hover: 点击以§d删除§r玩家{player} 在 {group} 中的权限设定
+
+      region_list:
+        title: "§7======§r 组内区域列表 §7======§r"
+        amount: "组 §b{group}§r 包含了 §3{count}§r 个区域:"
+        add_hover: "点击以添加其他区域到该组"
+        del_hover: "点击以自该组删除该区域"
+
+      set_default_perm: 已将组 §b{group}§r 的默认权限等级设定为 {perm}
+
+
+    add_del:
+      help:
+        desc: 使用该组指令以自更新列表中删除/向列表中添加区域文件
+        usage: |
+          §7{pre} {add} §r添加玩家当前所处区域
+          §7{pre} {add} §6<x> <z> <维度> §r添加指定区域
+          §7{pre} {del_} §r移除玩家当前所处区域
+          §7{pre} {del_} §6<x> <z> <dim> §r移除指定区域
+          §7{pre} {del_all} §r移除全部区域
+        args: |
+          §6<x> <z>§r 为区域坐标 (非方块坐标)
+          例: 区域 r.§b-3§r.§d1§r.mca 的坐标为 §bx=-3 §dz=1§r
+          §6<维度>§r 为原版维度编号或自定义维度的名称
+          §a主世界 = 0§4 下界 = -1§d 末地 = 1§r
+      error:
+        invalid_dimension: 无效维度 "{}"
+        not_a_player: 该操作仅供玩家执行
+      added: §d添加了§r区域 §b{}§r
+      removed: §d移除了§r区域 §b{}§r
+      existed: 区域 §b{}§c 已经添加过了§r
+      not_added: 区域 §b{}§c 未被添加§r
+      removed_all: §d移除了§r全部区域
+      batch_add: 添加 §b{succeeded}§r 个区域成功, §3{failed} 个失败
+      batch_del: 移除 §b{succeeded}§r 个区域成功, §3{failed} 个失败
+      group_warning: "区域 §b{}§r 包含在如下组中:"
+      warn_count: "总共 §3{}§r 个组"
+
+    confirm_abort:
+      help:
+        desc: |
+          确认或中止更新任务, 更新会话会在 {} 后超时
+        usage: |
+          §7{pre} confirm §r确认更新任务
+          §7{pre} abort §r中止更新任务
+
+    history:
+      help:
+        desc: 查询上次更新的结果
+        usage: |
+          §7{pre} {history} §r查询更新历史
+          §7{pre} {history} list §3[参数]§r列出上次更新的区域
+      error:
+        not_recorded: 未记录到更新历史
+      succeeded: §a成功§r
+      failed: §c失败§r
+      executed_at: 由 §6{player}§r 于 §e{time}§r 执行
+
+      result:
+        title: §7========§r 上次更新结果 §7========§r
+        executor: "执行者: §6{}§r"
+        time: "上次更新时间: §e{}§r"
+        status: "结果: {}"
+        upstream: "上游: §3{}§r"
+        region_amount: '区域数量: §3{count}§r {button}'
+        list_region_button: §b[区域列表]§r
+        list_button_hover: 点击显示上次更新的区域列表
+
+      list:
+        title: "§7========§r 上次更新区域 §7========§r"
+        amount: 上次操作更新了 §3{}§r 个区域
+
+
+    update:
+      error:
+        list_empty: 没有添加区域
+        session_running: 更新任务已创建过了
+        nothing_to_confirm: 暂无可确认的任务
+        nothing_to_abort: 暂无可中止的任务
+      help:
+        desc: |
+          执行并确认区域更新操作
+        usage: |
+          §7{pre} {update} §2[参数]§r 执行更新操作
+          §7{pre} {confirm} §r确认执行更新操作
+          §7{pre} {abort} §r中止执行更新操作
+        requires_confirm: |
+          更新操作默认情况下需要确认后方会执行
+        instantly: |
+          更新操作默认情况下将立即执行
+        update_delay: |
+          须在 {} 分钟内选择是否确认执行该操作
+        args: |
+          §2[参数]§r 可添加如下值:
+          §3{instantly}§r 立即执行更新操作
+          §5{requires_confirm}§r 操作需要等待确认后执行{period_text}
+          §9{confirm_time_wait} §b<时长>§r 设置确认等待时长为 {default_duration}
+      broadcast: "即将更新 §3{}§r 个区域: {}"
+      execute_confirm: §a已确定执行§r更新任务
+      execute_abort: 正尝试中止更新任务
+
+      confirm_hint:
+        text: "[§a确认更新§r]"
+        hover: 点击以§a确认§r执行更新操作
+      abort_hint:
+        text: "[§c中止更新§r]"
+        hover: 点击以§c中止§r执行更新操作
+      make_decision: "请在 §b{duration}§r 内作出选择:"
+
+  session:
+    countdown: §d{sec}§r 秒后将重启并更新 §3{region_count}§r 个区域
+    error_occurred: "出现意外错误: {exc}"
+    task_aborted: 更新任务§d已中止§r
+    task_confirmed: 更新任务§d已开始§r
+
+  units:
+    duration:
+      year: 年
+      mon: 月
+      day: 天
+      hour: 时
+      min: 分
+      sec: 秒
+
+  format:
+    datetime: "%Y-%m-%d %H:%M:%S"
+    console: "控制台"
+
+  group_permission:
+    denied: 无权限
+    user: 普通用户
+    admin: 管理员
+

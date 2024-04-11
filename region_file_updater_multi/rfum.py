@@ -271,8 +271,8 @@ class RegionFileUpdaterMulti:
         self.command_manager.add_command(AddDelCommand(self))
         self.command_manager.add_command(UpdateCommand(self))
         self.command_manager.add_command(HistoryCommand(self))
-        self.command_manager.add_command(DebugCommands(self))
         self.command_manager.add_command(GroupCommand(self))
+        self.command_manager.add_command(DebugCommands(self))
 
         self.command_manager.register()
         for pre in self.command_manager.prefixes:
