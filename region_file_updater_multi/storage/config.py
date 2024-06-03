@@ -75,7 +75,7 @@ class Config(ConfigurationBase):
 
             def validate_attribute(self, attr_name: str, attr_value: Any, **kwargs):
                 if attr_name == "type" and attr_value not in ["prime_backup", "world"]:
-                    raise ValueError("Invalid upstream value provided")
+                    raise ValueError("Invalid upstream type provided")
 
         upstreams: Optional[Dict[str, Upstream]] = {
             "survival_pb": Upstream.deserialize(
