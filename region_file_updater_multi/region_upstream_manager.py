@@ -154,10 +154,11 @@ class RegionUpstreamManager:
                 except RFUMFileNotFound:
                     if not allow_not_found:
                         raise
-                    if self.__rfum.config.get_remove_file_when_not_found():
+                    if self.__rfum.config.update_operation.remove_file_while_not_found:
                         self.__rfum.logger.info(
                             f'- [{current_upstream.__class__.__name__}] <{current_upstream.name}> has no such file named "{file}", removed'
                         )
+                        self.__rfum.file_utilities.delete(os.path.join(target_dir, file))
                 else:
                     self.__rfum.logger.info(
                         f"- [{current_upstream.__class__.__name__}] <{current_upstream.name}> {file} -> {target_dir}"

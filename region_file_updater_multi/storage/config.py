@@ -60,6 +60,7 @@ class Config(ConfigurationBase):
         prime_backup_file_not_found_log_format: List[str] = [
             "File '{file_name}' in backup #{backup_id:d} does not exist"
         ]
+        remove_file_while_not_found: bool = False
 
     update_operation: UpdateOperation = UpdateOperation.get_default()
 

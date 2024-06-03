@@ -1,6 +1,6 @@
 {
     "id": "region_file_updater_multi",
-    "version": "1.0.0-beta.1+build.240329",
+    "version": "1.0.0-beta.2+build.240603",
     "name": "Region file Updater Multi",
     "description": {
         "en_us": "A MCDR plugin to update region files in game from multiple locations",
