@@ -196,7 +196,7 @@ class AbstractSubCommand(ABC):
         return self.get_threaded_node(Enumeration)
 
     @property
-    def counting_literal(self):
+    def counting_literal(self) -> Type[CountingLiteral]:
         return self.get_threaded_node(CountingLiteral)
 
     def register_event_listeners(self) -> Any:
@@ -249,9 +249,9 @@ class AbstractSubCommand(ABC):
         b.arg(Z, z_f or self.integer)
         b.arg(DIM, d_f or self.quotable_text).requires(
             lambda src, ctx: ctx[DIM]
-            in self.__rfum.config.paths.dimension_region_folder.keys(),
+            in self.__rfum.config.paths.dimension_mca_files.keys(),
             lambda src, ctx: self.rtr("add_del.error.invalid_dimension", ctx[DIM]),
-        ).suggests(lambda: self.__rfum.config.paths.dimension_region_folder.keys())
+        ).suggests(lambda: self.__rfum.config.paths.dimension_mca_files.keys())
 
     def is_session_running(self, source: CommandSource, silent=False) -> bool:
         if self.rfum.current_session.is_session_running and not silent:

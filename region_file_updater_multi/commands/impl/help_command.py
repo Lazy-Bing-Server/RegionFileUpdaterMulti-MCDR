@@ -177,10 +177,12 @@ class HelpCommand(AbstractSubCommand):
                 upstream_name=UPS_NAME,
                 suggest_prefix=command,
             ),
-            self.rtr(f"{GROUP}.help.list_usage"),
-            self.rtr("help.arguments_title"),
+            # self.rtr(f"{GROUP}.help.list_usage"),
+            self.ctr("arguments_title"),
             self.rtr(f"{ADD}_{DEL}.{HELP}.args"),
-            self.rtr("help.optional_arguments_title"),
+            self.ctr("optional_arguments_title"),
             self.get_list_opt_args_text(),
+            self.rtr(f"{GROUP}.{HELP}.permission_title"),
+            self.rtr(f"{GROUP}.{HELP}.permission_levels"),
         ]
         source.reply(get_rfum_comp_prefix(RTextBase.join("\n", text)))

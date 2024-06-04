@@ -20,6 +20,7 @@ class DebugCommands(AbstractSubCommand):
     def add_children_for(self, root_node: AbstractNode):
         self.verbose("Debug commands enabled")
         builder = SimpleCommandBuilder()
+        builder.command(f"{DEBUG} players", self.debug_player_list)
         builder.command(
             f"{DEBUG} {UPSTREAM} extract file <{TARGET_FILE}>", self.debug_extract_file
         )
@@ -28,12 +29,13 @@ class DebugCommands(AbstractSubCommand):
             self.debug_extract_region,
         )
         builder.literal(DEBUG, self.permed_literal)
+        builder.literal("players", self.literal)
 
         def get_allow_not_found_node(name: str):
             node = self.quotable_text(name)
             return node.then(
-                CountingLiteral(ALLOW_NOT_FOUND, ANF_COUNT).redirects(node)
-            ).then(CountingLiteral("--clear", CLEAR_COUNT).redirects(node))
+                self.counting_literal(ALLOW_NOT_FOUND, ANF_COUNT).redirects(node)
+            ).then(self.counting_literal("--clear", CLEAR_COUNT).redirects(node))
 
         self.set_builder_coordinate_args(builder, d_f=get_allow_not_found_node)
         builder.arg(TARGET_FILE, get_allow_not_found_node)
@@ -42,6 +44,16 @@ class DebugCommands(AbstractSubCommand):
     @property
     def tr_key_prefix(self):
         return TRANSLATION_KEY_PREFIX + "command."
+
+    def debug_player_list(self, source: CommandSource):
+        players = self.rfum.online_players.get_player_list()
+        source.reply(
+            "Players ({count}/{limit}) {players}".format(
+                count=len(players),
+                limit=self.rfum.online_players.get_player_limit(),
+                players=", ".join(players),
+            )
+        )
 
     def debug_extract_file(self, source: CommandSource, context: CommandContext):
         with self.rfum.file_utilities:

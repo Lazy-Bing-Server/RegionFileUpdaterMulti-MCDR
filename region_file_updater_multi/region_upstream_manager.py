@@ -16,6 +16,25 @@ if TYPE_CHECKING:
     from region_file_updater_multi.storage.config import Config
 
 
+class DimensionString(str):
+    @property
+    def namespace(self):
+        if str(self) in ["-1", "0", "1"]:
+            return "minecraft"
+        if ":" in self:
+            return self.split(":", 1)[0]
+        return ""
+
+    @property
+    def name(self):
+        self_str = str(self)
+        if self_str in ["-1", "0", "1"]:
+            return {"-1": "the_nether", "0": "overworld", "1": "the_end"}[self_str]
+        if ":" in self:
+            return self.split(":", 1)[1]
+        return self_str
+
+
 class Region:
     x: Optional[int]
     z: Optional[int]
@@ -29,7 +48,7 @@ class Region:
     ):
         self.x = x
         self.z = z
-        self.dim = str(dim) if dim is not None else None
+        self.dim = DimensionString(dim) if dim is not None else None
 
     def assert_valid(self):
         if self.x is None or self.z is None or self.dim is None:
@@ -39,18 +58,19 @@ class Region:
     def from_player_coordinates(cls, x: float, z: float, dim: str):
         return cls(int(x) // 512, int(z) // 512, dim)
 
+    # Deprecated
     def to_file_name(self):
         return "r.{}.{}.mca".format(self.x, self.z)
 
     def to_file_list(self, config: "Config"):
         self.assert_valid()
         file_list = []
-        folders = config.paths.dimension_region_folder[str(self.dim)]
-        if isinstance(folders, str):
-            file_list.append(os.path.join(folders, self.to_file_name()))
-        elif isinstance(folders, Iterable):
-            for folder in folders:
-                file_list.append(os.path.join(folder, self.to_file_name()))
+        files = config.paths.dimension_mca_files[str(self.dim)]
+        if isinstance(files, str):
+            file_list.append(files.format(x=self.x, z=self.z, dim=self.dim))
+        elif isinstance(files, Iterable):
+            for file in files:
+                file_list.append(file.format(x=self.x, z=self.z, dim=self.dim))
         else:
             pass
         return file_list
@@ -149,15 +169,21 @@ class RegionUpstreamManager:
             )
             current_upstream = self.get_current_upstream()
             for file in file_list:
+                target_file = os.path.join(target_dir, file)
+                if os.path.exists(target_file):
+                    recycled_file = self.__rfum.file_utilities.recycle(target_file)
                 try:
                     current_upstream.extract_file(file, target_dir)
                 except RFUMFileNotFound:
                     if not allow_not_found:
                         raise
-                    if self.__rfum.config.get_remove_file_when_not_found():
+                    if self.__rfum.config.update_operation.remove_file_while_not_found:
                         self.__rfum.logger.info(
                             f'- [{current_upstream.__class__.__name__}] <{current_upstream.name}> has no such file named "{file}", removed'
                         )
+                    else:
+                        recycled_file.restore()
+                        recycled_file.delete()
                 else:
                     self.__rfum.logger.info(
                         f"- [{current_upstream.__class__.__name__}] <{current_upstream.name}> {file} -> {target_dir}"

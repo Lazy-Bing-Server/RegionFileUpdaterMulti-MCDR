@@ -1,67 +1,115 @@
 """
-Written by hand before building this tree, not printed by SimpleCommandBuilder.print_tree()
-Might be slightly different to the actual tree
-
-    Literal '!!rfum'
-    ├── Literal 'upstream'
-    │   ├── Literal 'list'
-    │   └── Literal 'set'
-    │       └── QuotableText <upstream>
-    ├── Literal 'add'
-    │   └── Integer <x>
-    │       └── Integer <z>
-    │           └── QuotableText <dimension>
-    ├── Literal 'del'
-    │   └── Integer <x>
-    │       └── Integer <z>
-    │           └── QuotableText <dimension>
-    ├── Literal 'del-all'
-    ├── Literal 'list'
-    ├── Literal 'update'
-    ├── Literal 'confirm'
-    ├── Literal 'abort'
-    ├── Literal 'history'
-    ├── Literal 'group'
-    │   ├── Literal 'list'
-    │   ├── Literal 'create'
-    │   │   └── QuotableText <new_range>
-    │   ├── Literal 'delete'
-    │   │   └── QuotableText <range>
-    │   ├── Literal 'info'
-    │   │   └── QuotableText <range>
-    │   ├── Literal 'use'
-    │   │   └── QuotableText <range>
-    │   ├── Literal 'append'
-    │   │   └── QuotableText <range>
-    │   │       └── Integer <x>
-    │   │           └── Integer <z>
-    │   │               └── QuotableText <dimension>
-    │   ├── Literal 'contract'
-    │   │   └── QuotableText <range>
-    │   │       └── Integer <x>
-    │   │           └── Integer <z>
-    │   │               └── QuotableText <dimension>
-    │   ├── Literal 'protect'
-    │   │   └── QuotableText <range>
-    │   │       ├── Literal 'enable'
-    │   │       └── Literal 'disable'
-    │   ├── Literal 'whitelist'
-    │   │   └── QuotableText <range>
-    │   │       ├── Literal 'append'
-    │   │       │   └── QuotableText <player_to_be_whitelisted>
-    │   │       ├── Literal 'remove'
-    │   │       │   └── QuotableText <whitelisted_player>
-    │   │       ├── Literal 'enable'
-    │   │       └── Literal 'disable'
-    │   └── Literal 'blacklist'
-    │       └── QuotableText <range>
-    │           ├── Literal 'append'
-    │           │   └── QuotableText <player_to_be_blacklisted>
-    │           ├── Literal 'remove'
-    │           │   └── QuotableText <blacklisted_player>
-    │           ├── Literal 'enable'
-    │           └── Literal 'disable'
-    └── Literal 'reload'
+Literal {'!!rfum', '!!region'}
+├── Literal 'reload'
+├── Literal 'help'
+│   ├── Literal 'upstream'
+│   ├── Literal {'add', 'del', 'del-all'}
+│   ├── Literal 'list'
+│   ├── Literal 'history'
+│   ├── Literal {'abort', 'confirm', 'update'}
+│   └── Literal 'group'
+├── Literal 'upstream'
+│   ├── Literal 'list'
+│   │   ├── Literal '--page'
+│   │   │   └── Integer <page_num>
+│   │   └── Literal '--per-page'
+│   │       └── Integer <item_count>
+│   └── Literal 'set'
+│       └── _QuotableText <upstream_name>
+├── Literal 'add'
+│   ├── Literal '--suppress-warning'
+│   ├── Literal 'group'
+│   │   └── _QuotableText <group_name>
+│   │       └── Literal '--suppress-warning'
+│   └── _Integer <x>
+│       └── _Integer <z>
+│           └── _QuotableText <dimension>
+│               └── Literal '--suppress-warning'
+├── Literal 'del'
+│   ├── Literal 'group'
+│   │   └── _QuotableText <group_name>
+│   │       └── Literal '--suppress-warning'
+│   └── _Integer <x>
+│       └── _Integer <z>
+│           └── _QuotableText <dimension>
+├── Literal 'del-all'
+├── Literal 'list'
+│   ├── Literal '--page'
+│   │   └── Integer <page_num>
+│   └── Literal '--per-page'
+│       └── Integer <item_count>
+├── Literal 'update'
+│   ├── Literal '--instantly'
+│   ├── Literal '--requires-confirm'
+│   └── Literal '--confirm-time-wait'
+│       └── _DurationNode <duration>
+├── Literal 'confirm'
+├── Literal 'abort'
+├── Literal 'history'
+│   └── Literal 'list'
+│       ├── Literal '--page'
+│       │   └── Integer <page_num>
+│       └── Literal '--per-page'
+│           └── Integer <item_count>
+├── Literal 'group'
+│   ├── Literal 'expand'
+│   │   └── _QuotableText <group_name>
+│   │       └── _Integer <x>
+│   │           └── _Integer <z>
+│   │               └── _QuotableText <dimension>
+│   ├── Literal 'contract'
+│   │   └── _QuotableText <group_name>
+│   │       └── _Integer <x>
+│   │           └── _Integer <z>
+│   │               └── _QuotableText <dimension>
+│   ├── Literal {'perm', 'permission'}
+│   │   └── _QuotableText <group_name>
+│   │       ├── Literal 'list'
+│   │       │   ├── Literal '--page'
+│   │       │   │   └── Integer <page_num>
+│   │       │   └── Literal '--per-page'
+│   │       │       └── Integer <item_count>
+│   │       ├── Literal 'set'
+│   │       │   └── _QuotableText <player>
+│   │       │       ├── Literal '--confirm'
+│   │       │       └── _Enumeration <permission> (GroupPermission)
+│   │       │           └── Literal '--confirm'
+│   │       ├── Literal 'set-default'
+│   │       │   └── _Enumeration <permission> (GroupPermission)
+│   │       │       └── Literal '--confirm'
+│   │       └── Literal 'del'
+│   │           └── _QuotableText <player>
+│   │               └── Literal '--confirm'
+│   ├── Literal 'list'
+│   │   ├── Literal '--page'
+│   │   │   └── Integer <page_num>
+│   │   └── Literal '--per-page'
+│   │       └── Integer <item_count>
+│   ├── Literal 'create'
+│   │   └── _QuotableText <new_group_name>
+│   ├── Literal 'delete'
+│   │   └── _QuotableText <group_name>
+│   └── Literal 'info'
+│       └── _QuotableText <group_name>
+│           └── Literal 'list'
+│               ├── Literal '--page'
+│               │   └── Integer <page_num>
+│               └── Literal '--per-page'
+│                   └── Integer <item_count>
+└── Literal 'debug'
+    ├── Literal 'players'
+    └── Literal 'upstream'
+        └── Literal 'extract'
+            ├── Literal 'file'
+            │   └── _QuotableText <target_file>
+            │       ├── Literal '--allow-not-found'
+            │       └── Literal '--clear'
+            └── Literal 'region'
+                └── _Integer <x>
+                    └── _Integer <z>
+                        └── _QuotableText <dimension>
+                            ├── Literal '--allow-not-found'
+                            └── Literal '--clear'
 """
 
 # Literals

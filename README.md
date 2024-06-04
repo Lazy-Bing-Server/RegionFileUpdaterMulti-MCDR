@@ -1,33 +1,46 @@
+**English** | [中文(Chinese)](README_zh.md)
+
 # Region File Updater Multi
 
 A plugin to update region files from multiple upstreams (including [PrimeBackup](https://github.com/PrimeBackup/) databases)
 
-Rebuilt version of [RegionFileUpdater](https://github.com/TISUnion/RegionFileUpdater/),
-all the functions of original version are ready to use
-
-*Document of this plugin is still on its way*
+It's a rebuilt version of [RegionFileUpdater](https://github.com/TISUnion/RegionFileUpdater/). Experience may almost be the same.
 
 > [!WARNING]
-> **RegionFileUpdaterMulti** is still in **early access** stage, 
+> **RegionFileUpdaterMulti** will modify your world save of current server
 >
-> Note that **NEVER** risk using experimental stuff in production environment,
+> Please keep in mind, update operation will **OVERWRITE** your current region files, and this operation can't be undone
 > 
-> Please tell us the commit you can reproduce the issue out before submit
+> Never forget to check your region list, and back your world save up before updating!!!
 
 
-# Yes, I'm ready to have a try!
+## Features
 
-1. Clone this repo
-2. Install requirements
-```
-cd <location of your local repo>
-python -m pip install -r requirements.txt
-```
-3. Pack
-```
-python -m mcdreforged pack
-```
-5. Copy generated `.mcdr` plugin archive to your plugin directory and load in MCDR
-6. Install any version of [MinecraftDataAPI](https://github.com/MCDReforged/MinecraftDataAPI)
-7. Configure `config/region_file_updater_multi/config.yml` in MCDR instance working directory, the set `enable` to `true`
-8. Have a try! Help message goes command `!!region|!!rfum`
+- [PrimeBackup](https://github.com/PrimeBackup/) databases are supported to update from
+- Multiple upstream could be configured to switch in game
+- More safe update operation, deleted files will be restored if problem occurs
+- Group the regions up, and update these regions in group
+- Individual permission system for group, which could protect regions in groups 
+
+
+## Requirements
+
+[MCDReforged](https://github.com/Fallen-Breath/MCDReforged) `>=2.12.0`
+
+Any version of [MinecraftDataAPI](https://github.com/MCDReforged/MinecraftDataAPI)
+
+Python module requirements goes [requirements.txt](requirements.txt), installing them with `pip install -r requirements.txt`
+
+## Documents
+
+[Quick start](docs/quick_start.md)
+
+[Configuration](docs/config.md)
+
+[Command usage](docs/command.md)
+
+## Thanks
+
+[RegionFileUpdater](https://github.com/TISUnion/RegionFileUpdater) and [PrimeBackup](https://github.com/TISUnion/PrimeBackup) by [\hard-working fox Miss Fallen/](https://github.com/Fallen-Breath)
+
+(xD

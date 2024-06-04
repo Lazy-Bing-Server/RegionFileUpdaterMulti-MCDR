@@ -254,10 +254,6 @@ class GroupCommand(AbstractSubCommand):
                 f"{SET} <{PLAYER}> <{PERM_ENUM}>", self.set_player_permission
             )
             perm_builder.command(
-                f"{SET} <{PLAYER}> <{PERM_ENUM}> {CONFIRM_FLAG}",
-                self.set_player_permission,
-            )
-            perm_builder.command(
                 f"{SET_DEFAULT} <{PERM_ENUM}>", self.set_default_permission
             )
             perm_builder.command(LIST, self.list_player_permission)
@@ -285,10 +281,27 @@ class GroupCommand(AbstractSubCommand):
                         player_list.append(player_list)
                 return player_list
 
-            perm_builder.arg(PLAYER, self.quotable_text).suggests(player_suggester)
-            perm_builder.arg(
-                PERM_ENUM, lambda name: self.enumeration(name, GroupPermission)
+            def perm_enum_getter(name: str):
+                target_root = self.enumeration(name, GroupPermission)
+                return target_root.then(
+                    self.counting_literal(CONFIRM_FLAG, CONFIRM_COUNT).redirects(
+                        target_root
+                    )
+                )
+
+            def player_node_process(player_node: QuotableText):
+                player_node.suggests(player_suggester)
+                player_node.then(
+                    self.counting_literal(CONFIRM_FLAG, CONFIRM_COUNT).runs(
+                        self.delete_permission
+                    )
+                )
+                return player_node
+
+            perm_builder.arg(PLAYER, self.quotable_text).post_process(
+                player_node_process
             )
+            perm_builder.arg(PERM_ENUM, perm_enum_getter)
 
             perm_builder.add_children_for(group_node)
             return node.then(perm_node.then(group_node))
@@ -329,7 +342,7 @@ class GroupCommand(AbstractSubCommand):
         prefix = context.command.split(" ")[0]
         source.reply(
             self.htr(
-                f"command.{GROUP}.{HELP}.overview",
+                f"{GROUP}.{HELP}.overview",
                 pre=prefix,
                 help=HELP,
                 group=GROUP,
@@ -494,7 +507,10 @@ class GroupCommand(AbstractSubCommand):
             get_rfum_comp_prefix(
                 self.ctr("info.detailed_perm")
                 .set_color(RColor.light_purple)
-                .c(RAction.run_command, f"{current_prefix} {GROUP} {PERMISSION} {LIST}")
+                .c(
+                    RAction.run_command,
+                    f"{current_prefix} {GROUP} {PERM} {group_name} {LIST}",
+                )
             ),
         ]
         source.reply(get_rfum_comp_prefix(*text, divider="\n"))
@@ -622,6 +638,7 @@ class GroupCommand(AbstractSubCommand):
         permission: GroupPermission = context[PERM_ENUM]
         target_player = context[PLAYER]
         confirm = context.get(CONFIRM_COUNT, 0) > 0
+        self.verbose(f"Confirm flag = {confirm}")
         if group is None:
             return self.group_not_found(source, group_name)
         if not group.is_src_admin(source):
@@ -635,7 +652,7 @@ class GroupCommand(AbstractSubCommand):
             self.__player_perm_jobs[target_player].start()
 
         requires_confirm = False
-        if self.config.get_lost_permission_requires_confirm() or not confirm:
+        if self.config.get_lost_permission_requires_confirm() and not confirm:
             with group.keep_modify_context():
                 group.set_permission(target_player, permission)
                 requires_confirm = not group.get_source_permission(source).is_admin
@@ -744,7 +761,7 @@ class GroupCommand(AbstractSubCommand):
         group_name = self.get_group_name(context)
         group = self.rfum.group_manager.get_group(group_name)
         permission: GroupPermission = context[PERM_ENUM]
-        confirm = context.get(CONFIRM_COUNT, 0) > 0
+        confirm = self.get_ctx_flag(context, CONFIRM_COUNT)
         if group is None:
             return self.group_not_found(source, group_name)
         if not group.is_src_admin(source):
@@ -760,7 +777,7 @@ class GroupCommand(AbstractSubCommand):
             self.__default_perm_jobs[source.player].start()
 
         requires_confirm = False
-        if self.config.get_lost_permission_requires_confirm() or not confirm:
+        if self.config.get_lost_permission_requires_confirm() and not confirm:
             with group.keep_modify_context():
                 group.set_default_permission(permission)
                 requires_confirm = not group.get_source_permission(source).is_admin
@@ -834,7 +851,7 @@ class GroupCommand(AbstractSubCommand):
 
         self.verbose("Collecting requires_confirm flag")
         requires_confirm = False
-        if self.config.get_lost_permission_requires_confirm() or not confirm:
+        if self.config.get_lost_permission_requires_confirm() and not confirm:
             with group.keep_modify_context():
                 group.remove_permission(target_player)
                 requires_confirm = not group.get_source_permission(source).is_admin
