@@ -284,9 +284,9 @@ class GroupCommand(AbstractSubCommand):
             def perm_enum_getter(name: str):
                 target_root = self.enumeration(name, GroupPermission)
                 return target_root.then(
-                    self.counting_literal(
-                        CONFIRM_FLAG, CONFIRM_COUNT
-                    ).redirects(target_root)
+                    self.counting_literal(CONFIRM_FLAG, CONFIRM_COUNT).redirects(
+                        target_root
+                    )
                 )
 
             def player_node_process(player_node: QuotableText):
@@ -509,7 +509,7 @@ class GroupCommand(AbstractSubCommand):
                 .set_color(RColor.light_purple)
                 .c(
                     RAction.run_command,
-                    f"{current_prefix} {GROUP} {PERM} {group_name} {LIST}"
+                    f"{current_prefix} {GROUP} {PERM} {group_name} {LIST}",
                 )
             ),
         ]

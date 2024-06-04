@@ -220,6 +220,8 @@ class RegionFileUpdaterMulti:
 
     def register_custom_translations(self):
         def translation_filter(mapping: Dict[str, str]):
+            if not self.config.get_enable_custom_language_filter():
+                return mapping
             ret = {}
             for k, v in mapping.items():
                 if k == SELF_PLUGIN_ID or k.startswith(TRANSLATION_KEY_PREFIX):
@@ -241,7 +243,7 @@ class RegionFileUpdaterMulti:
                     if ext in ["yml", "yaml"]:
                         try:
                             with open(path, "r", encoding="utf8") as f:
-                                data = yaml.YAML().load(f)
+                                data = yaml.YAML(typ="safe").load(f)
                         except:
                             continue
                     elif ext == "json":

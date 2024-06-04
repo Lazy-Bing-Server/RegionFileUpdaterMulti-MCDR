@@ -51,7 +51,7 @@ class DebugCommands(AbstractSubCommand):
             "Players ({count}/{limit}) {players}".format(
                 count=len(players),
                 limit=self.rfum.online_players.get_player_limit(),
-                players=", ".join(players)
+                players=", ".join(players),
             )
         )
 

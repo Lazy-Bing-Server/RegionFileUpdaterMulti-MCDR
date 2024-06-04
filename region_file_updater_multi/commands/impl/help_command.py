@@ -183,6 +183,6 @@ class HelpCommand(AbstractSubCommand):
             self.ctr("optional_arguments_title"),
             self.get_list_opt_args_text(),
             self.rtr(f"{GROUP}.{HELP}.permission_title"),
-            self.rtr(f"{GROUP}.{HELP}.permission_levels")
+            self.rtr(f"{GROUP}.{HELP}.permission_levels"),
         ]
         source.reply(get_rfum_comp_prefix(RTextBase.join("\n", text)))

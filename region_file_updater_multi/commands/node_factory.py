@@ -3,7 +3,6 @@ from region_file_updater_multi.utils.misc_tools import RFUMInstance
 from region_file_updater_multi.utils.units import Duration
 
 
-
 class DurationNode(ArgumentNode):
     def parse(self, text: str) -> ParseResult:
         result = QuotableText("##Temp").parse(text)

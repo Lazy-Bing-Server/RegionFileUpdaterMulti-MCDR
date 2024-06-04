@@ -1,16 +1,14 @@
-import datetime
 import json
 import os.path
 import shutil
 import threading
 import time
-from dataclasses import dataclass
 from contextlib import contextmanager
 from pathlib import Path
 from zipfile import ZipFile
 from typing import TYPE_CHECKING, Optional, List
 
-from mcdreforged.api.utils import deserialize, serialize
+from mcdreforged.api.utils import deserialize, serialize, Serializable
 
 from region_file_updater_multi.mcdr_globals import *
 
@@ -22,11 +20,20 @@ class RFUMFileNotFound(FileNotFoundError):
     pass
 
 
+class RFUMMetaSavingFailed(Exception):
+    pass
+
+
 class RecycledFile:
-    @dataclass
-    class Metadata:
+    class Metadata(Serializable):
         original_file_path: str
         delete_time: float
+
+        def __str__(self):
+            return f"RecycledMetadata[original_file_path='{self.original_file_path}', delete_time={self.delete_time}]"
+
+        def __repr__(self):
+            return str(self)
 
     def __init__(
         self,
@@ -37,19 +44,22 @@ class RecycledFile:
         self.__rfum = rfum
         self.__slot_path = path_in_bin
         self.__meta: Optional[RecycledFile.Metadata] = None
-        self.__lock = lock
+        self.__lock = lock or threading.RLock()
         self.load_metadata()
 
     def load_metadata(self):
-        if not os.path.isfile(self.meta_path):
-            return False
-        try:
-            with open(self.meta_path, "r", encoding="utf8") as f:
-                self.__meta = deserialize(json.load(f), self.Metadata)
-        except Exception as e:
-            self.__rfum.verbose(f"[{e.__class__.__name__}] {str(e)}")
-            self.__meta = None
-        return self.__meta is not None
+        with self.__lock:
+            if not os.path.isfile(self.meta_path):
+                return False
+            try:
+                with open(self.meta_path, "r", encoding="utf8") as f:
+                    raw = json.load(f)
+                    self.__rfum.verbose(f"Loading metadata: {raw}")
+                    self.__meta = deserialize(raw, self.Metadata)
+            except Exception as e:
+                self.__rfum.verbose(f"[{e.__class__.__name__}] {str(e)}")
+                self.__meta = None
+            return self.__meta is not None
 
     @property
     def is_available(self):
@@ -86,24 +96,25 @@ class RecycledFile:
         return self.__meta.delete_time
 
     def save_metadata(self, metadata: Optional["Metadata"] = None):
-        if metadata is not None:
-            self.__meta = metadata
-        try:
-            with open(self.meta_path, "w", encoding="utf8") as f:
-                json.dump(serialize(metadata), f, ensure_ascii=False, indent=4)
-        except Exception as e:
-            self.__rfum.verbose(f"[{e.__class__.__name__}] {str(e)}")
-            self.__meta = None
-            return False
-        return True
+        with self.__lock:
+            if metadata is not None:
+                self.__meta = metadata
+            try:
+                with open(self.meta_path, "w", encoding="utf8") as f:
+                    serialized = serialize(metadata)
+                    self.__rfum.verbose(f"Saving metadata: {serialized}")
+                    json.dump(serialized, f, ensure_ascii=False, indent=4)
+            except Exception as e:
+                self.__rfum.verbose(f"[{e.__class__.__name__}] {str(e)}")
+                self.__meta = None
+                return False
+            return True
 
     def restore(self):
         with self.__lock:
-            self.__rfum.verbose(
-                f"Restoring file {self.__meta.original_file_path} deleted at {datetime.datetime.fromtimestamp(self.delete_time)}"
-            )
             if not self.is_available:
-                return
+                raise RFUMFileNotFound("Metadata not found")
+            self.__rfum.verbose(f"Restoring deleted file with metadata {self.__meta}")
             if os.path.isfile(self.original_path):
                 os.remove(self.original_path)
             if os.path.isdir(self.original_path):
@@ -112,8 +123,11 @@ class RecycledFile:
 
     def delete(self):
         with self.__lock:
+            self.__rfum.verbose(
+                f"Removing recycled file {self.__meta} in {self.path_in_bin}"
+            )
             if os.path.isdir(self.__slot_path):
-                os.remove(self.__slot_path)
+                shutil.rmtree(self.__slot_path)
 
     def __lt__(self, other: "RecycledFile"):
         return self.delete_time < other.delete_time
@@ -179,7 +193,10 @@ class FileUtils:
             )
             recycled_file = RecycledFile(dir_path, self.__rfum, self.__lock)
             self.move(target_file, recycled_file.file_path)
-            recycled_file.save_metadata(meta)
+            self.__rfum.verbose(f"Saving metadata {meta} to {recycled_file.meta_path}")
+            if not recycled_file.save_metadata(meta):
+                raise RFUMMetaSavingFailed(recycled_file.meta_path)
+            return recycled_file
 
     @staticmethod
     def delete(target_file: str, allow_not_found: bool = True):

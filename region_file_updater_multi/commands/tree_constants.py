@@ -1,115 +1,115 @@
 """
-    Literal {'!!rfum', '!!region'}
-    ├── Literal 'reload'
-    ├── Literal 'help'
-    │   ├── Literal 'upstream'
-    │   ├── Literal {'add', 'del', 'del-all'}
-    │   ├── Literal 'list'
-    │   ├── Literal 'history'
-    │   ├── Literal {'abort', 'confirm', 'update'}
-    │   └── Literal 'group'
-    ├── Literal 'upstream'
-    │   ├── Literal 'list'
-    │   │   ├── Literal '--page'
-    │   │   │   └── Integer <page_num>
-    │   │   └── Literal '--per-page'
-    │   │       └── Integer <item_count>
-    │   └── Literal 'set'
-    │       └── _QuotableText <upstream_name>
-    ├── Literal 'add'
-    │   ├── Literal '--suppress-warning'
-    │   ├── Literal 'group'
-    │   │   └── _QuotableText <group_name>
-    │   │       └── Literal '--suppress-warning'
-    │   └── _Integer <x>
-    │       └── _Integer <z>
-    │           └── _QuotableText <dimension>
-    │               └── Literal '--suppress-warning'
-    ├── Literal 'del'
-    │   ├── Literal 'group'
-    │   │   └── _QuotableText <group_name>
-    │   │       └── Literal '--suppress-warning'
-    │   └── _Integer <x>
-    │       └── _Integer <z>
-    │           └── _QuotableText <dimension>
-    ├── Literal 'del-all'
-    ├── Literal 'list'
-    │   ├── Literal '--page'
-    │   │   └── Integer <page_num>
-    │   └── Literal '--per-page'
-    │       └── Integer <item_count>
-    ├── Literal 'update'
-    │   ├── Literal '--instantly'
-    │   ├── Literal '--requires-confirm'
-    │   └── Literal '--confirm-time-wait'
-    │       └── _DurationNode <duration>
-    ├── Literal 'confirm'
-    ├── Literal 'abort'
-    ├── Literal 'history'
-    │   └── Literal 'list'
-    │       ├── Literal '--page'
-    │       │   └── Integer <page_num>
-    │       └── Literal '--per-page'
-    │           └── Integer <item_count>
-    ├── Literal 'group'
-    │   ├── Literal 'expand'
-    │   │   └── _QuotableText <group_name>
-    │   │       └── _Integer <x>
-    │   │           └── _Integer <z>
-    │   │               └── _QuotableText <dimension>
-    │   ├── Literal 'contract'
-    │   │   └── _QuotableText <group_name>
-    │   │       └── _Integer <x>
-    │   │           └── _Integer <z>
-    │   │               └── _QuotableText <dimension>
-    │   ├── Literal {'perm', 'permission'}
-    │   │   └── _QuotableText <group_name>
-    │   │       ├── Literal 'list'
-    │   │       │   ├── Literal '--page'
-    │   │       │   │   └── Integer <page_num>
-    │   │       │   └── Literal '--per-page'
-    │   │       │       └── Integer <item_count>
-    │   │       ├── Literal 'set'
-    │   │       │   └── _QuotableText <player>
-    │   │       │       ├── Literal '--confirm'
-    │   │       │       └── _Enumeration <permission> (GroupPermission)
-    │   │       │           └── Literal '--confirm'
-    │   │       ├── Literal 'set-default'
-    │   │       │   └── _Enumeration <permission> (GroupPermission)
-    │   │       │       └── Literal '--confirm'
-    │   │       └── Literal 'del'
-    │   │           └── _QuotableText <player>
-    │   │               └── Literal '--confirm'
-    │   ├── Literal 'list'
-    │   │   ├── Literal '--page'
-    │   │   │   └── Integer <page_num>
-    │   │   └── Literal '--per-page'
-    │   │       └── Integer <item_count>
-    │   ├── Literal 'create'
-    │   │   └── _QuotableText <new_group_name>
-    │   ├── Literal 'delete'
-    │   │   └── _QuotableText <group_name>
-    │   └── Literal 'info'
-    │       └── _QuotableText <group_name>
-    │           └── Literal 'list'
-    │               ├── Literal '--page'
-    │               │   └── Integer <page_num>
-    │               └── Literal '--per-page'
-    │                   └── Integer <item_count>
-    └── Literal 'debug'
-        ├── Literal 'players'
-        └── Literal 'upstream'
-            └── Literal 'extract'
-                ├── Literal 'file'
-                │   └── _QuotableText <target_file>
-                │       ├── Literal '--allow-not-found'
-                │       └── Literal '--clear'
-                └── Literal 'region'
-                    └── _Integer <x>
-                        └── _Integer <z>
-                            └── _QuotableText <dimension>
-                                ├── Literal '--allow-not-found'
-                                └── Literal '--clear'
+Literal {'!!rfum', '!!region'}
+├── Literal 'reload'
+├── Literal 'help'
+│   ├── Literal 'upstream'
+│   ├── Literal {'add', 'del', 'del-all'}
+│   ├── Literal 'list'
+│   ├── Literal 'history'
+│   ├── Literal {'abort', 'confirm', 'update'}
+│   └── Literal 'group'
+├── Literal 'upstream'
+│   ├── Literal 'list'
+│   │   ├── Literal '--page'
+│   │   │   └── Integer <page_num>
+│   │   └── Literal '--per-page'
+│   │       └── Integer <item_count>
+│   └── Literal 'set'
+│       └── _QuotableText <upstream_name>
+├── Literal 'add'
+│   ├── Literal '--suppress-warning'
+│   ├── Literal 'group'
+│   │   └── _QuotableText <group_name>
+│   │       └── Literal '--suppress-warning'
+│   └── _Integer <x>
+│       └── _Integer <z>
+│           └── _QuotableText <dimension>
+│               └── Literal '--suppress-warning'
+├── Literal 'del'
+│   ├── Literal 'group'
+│   │   └── _QuotableText <group_name>
+│   │       └── Literal '--suppress-warning'
+│   └── _Integer <x>
+│       └── _Integer <z>
+│           └── _QuotableText <dimension>
+├── Literal 'del-all'
+├── Literal 'list'
+│   ├── Literal '--page'
+│   │   └── Integer <page_num>
+│   └── Literal '--per-page'
+│       └── Integer <item_count>
+├── Literal 'update'
+│   ├── Literal '--instantly'
+│   ├── Literal '--requires-confirm'
+│   └── Literal '--confirm-time-wait'
+│       └── _DurationNode <duration>
+├── Literal 'confirm'
+├── Literal 'abort'
+├── Literal 'history'
+│   └── Literal 'list'
+│       ├── Literal '--page'
+│       │   └── Integer <page_num>
+│       └── Literal '--per-page'
+│           └── Integer <item_count>
+├── Literal 'group'
+│   ├── Literal 'expand'
+│   │   └── _QuotableText <group_name>
+│   │       └── _Integer <x>
+│   │           └── _Integer <z>
+│   │               └── _QuotableText <dimension>
+│   ├── Literal 'contract'
+│   │   └── _QuotableText <group_name>
+│   │       └── _Integer <x>
+│   │           └── _Integer <z>
+│   │               └── _QuotableText <dimension>
+│   ├── Literal {'perm', 'permission'}
+│   │   └── _QuotableText <group_name>
+│   │       ├── Literal 'list'
+│   │       │   ├── Literal '--page'
+│   │       │   │   └── Integer <page_num>
+│   │       │   └── Literal '--per-page'
+│   │       │       └── Integer <item_count>
+│   │       ├── Literal 'set'
+│   │       │   └── _QuotableText <player>
+│   │       │       ├── Literal '--confirm'
+│   │       │       └── _Enumeration <permission> (GroupPermission)
+│   │       │           └── Literal '--confirm'
+│   │       ├── Literal 'set-default'
+│   │       │   └── _Enumeration <permission> (GroupPermission)
+│   │       │       └── Literal '--confirm'
+│   │       └── Literal 'del'
+│   │           └── _QuotableText <player>
+│   │               └── Literal '--confirm'
+│   ├── Literal 'list'
+│   │   ├── Literal '--page'
+│   │   │   └── Integer <page_num>
+│   │   └── Literal '--per-page'
+│   │       └── Integer <item_count>
+│   ├── Literal 'create'
+│   │   └── _QuotableText <new_group_name>
+│   ├── Literal 'delete'
+│   │   └── _QuotableText <group_name>
+│   └── Literal 'info'
+│       └── _QuotableText <group_name>
+│           └── Literal 'list'
+│               ├── Literal '--page'
+│               │   └── Integer <page_num>
+│               └── Literal '--per-page'
+│                   └── Integer <item_count>
+└── Literal 'debug'
+    ├── Literal 'players'
+    └── Literal 'upstream'
+        └── Literal 'extract'
+            ├── Literal 'file'
+            │   └── _QuotableText <target_file>
+            │       ├── Literal '--allow-not-found'
+            │       └── Literal '--clear'
+            └── Literal 'region'
+                └── _Integer <x>
+                    └── _Integer <z>
+                        └── _QuotableText <dimension>
+                            ├── Literal '--allow-not-found'
+                            └── Literal '--clear'
 """
 
 # Literals

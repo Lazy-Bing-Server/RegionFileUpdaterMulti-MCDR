@@ -84,10 +84,10 @@ class Config(ConfigurationBase):
             ),
             "survival_qb": Upstream.get_default(),
         }
-        dimension_region_folder: Dict[str, Union[str, List[str]]] = {
-            "-1": ["DIM-1/region", "DIM-1/poi"],
-            "0": ["region", "poi"],
-            "1": ["DIM1/region", "DIM1/poi"],
+        dimension_mca_files: Dict[str, Union[str, List[str]]] = {
+            "-1": ["DIM{dim}/region/r.{x}.{z}.mca", "DIM{dim}/poi/r.{x}.{z}.mca"],
+            "0": ["region/r.{x}.{z}.mca", "poi/r.{x}.{z}.mca"],
+            "1": ["DIM{dim}/region/r.{x}.{z}.mca", "DIM{dim}/poi/r.{x}.{z}.mca"],
         }
 
     paths: Paths = Paths.get_default()
@@ -109,10 +109,10 @@ class Config(ConfigurationBase):
         popen_terminate_timeout: int
         prime_backup_log_format: List[str]
         thread_pool_executor_max_workers: int
-        remove_file_while_not_found: bool
         attach_plugin_log_handler: bool
         lost_permission_requires_confirm: bool
         minecraft_data_api_timeout: float
+        enable_custom_language_filter: bool
 
     experimental: Optional[Debug] = None
 
@@ -128,7 +128,7 @@ class Config(ConfigurationBase):
         return self.experimental or self.Debug.get_default()
 
     def get_mc_data_api_timeout(self):
-        return self.get_debug_options().get("minecraft_data_api_timeout", 3)
+        return self.get_debug_options().get("minecraft_data_api_timeout", 10)
 
     def get_verbosity(self):
         return self.get_debug_options().get("verbosity", False)
@@ -163,5 +163,5 @@ class Config(ConfigurationBase):
     def get_lost_permission_requires_confirm(self):
         return self.get_debug_options().get("lost_permission_requires_confirm", True)
 
-    def get_remove_file_when_not_found(self):
-        return self.get_debug_options().get("remove_file_while_not_found", True)
+    def get_enable_custom_language_filter(self):
+        return self.get_debug_options().get("enable_custom_language_filter", True)
