@@ -61,9 +61,9 @@ class CommandManager:
         meta = self.__rfum.server.get_self_metadata()
         version = meta.version
         current_prefix = context.command.split(" ")[0]
-        version_str = (
-            ".".join([str(n) for n in version.component]) + "-" + str(version.pre)
-        )
+        version_str = ".".join([str(n) for n in version.component])
+        if version.pre is not None:
+            version_str += "-" + str(version.pre)
         source.reply(
             self.__rfum.htr(
                 "command.help.overview",
