@@ -377,7 +377,7 @@ class GroupCommand(AbstractSubCommand):
                 .h(self.ctr(f"{LIST}.create_hover"))
                 .c(RAction.suggest_command, f"{current_prefix} {GROUP} {CREATE} ")
             ),
-            list_comp.get_page_rtext(page, item_per_page=item_per_page),
+            *list_comp.get_page_line_list(page, item_per_page=item_per_page),
             list_comp.get_page_hint_line(
                 page,
                 item_per_page=item_per_page,
@@ -431,11 +431,7 @@ class GroupCommand(AbstractSubCommand):
                 ),
                 divider=" ",
             ),
-        ]
-        page_text = list_comp.get_page_rtext(page, item_per_page=item_per_page)
-        if page_text is not None:
-            text.append(page_text)
-        text += [
+            *list_comp.get_page_line_list(page, item_per_page=item_per_page),
             list_comp.get_page_hint_line(
                 page,
                 item_per_page=item_per_page,
@@ -734,7 +730,7 @@ class GroupCommand(AbstractSubCommand):
                     count=len(group.permission_mapping),
                 )
             ),
-            list_comp.get_page_rtext(page, item_per_page=item_per_page),
+            *list_comp.get_page_line_list(page, item_per_page=item_per_page),
             list_comp.get_page_hint_line(page, item_per_page=item_per_page),
         ]
         source.reply(get_rfum_comp_prefix(*text, divider="\n"))

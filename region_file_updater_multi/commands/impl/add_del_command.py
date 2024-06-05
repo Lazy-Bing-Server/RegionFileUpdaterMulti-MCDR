@@ -210,6 +210,10 @@ class AddDelCommand(AbstractSubCommand):
                     self.ctr("error.not_a_player").set_color(RColor.red)
                 )
             )
+        if self.server.get_plugin_instance(MINECRAFT_DATA_API) is None:
+            return source.reply(
+                self.ctr("error.api_not_installed").set_color(RColor.red)
+            )
         self.__add_region(
             source, self.get_region_from_player(misc_tools.get_player_from_src(source))
         )
@@ -247,6 +251,10 @@ class AddDelCommand(AbstractSubCommand):
                 get_rfum_comp_prefix(
                     self.ctr("error.not_a_player").set_color(RColor.red)
                 )
+            )
+        if self.server.get_plugin_instance(MINECRAFT_DATA_API) is None:
+            return source.reply(
+                self.ctr("error.api_not_installed").set_color(RColor.red)
             )
         self.__del_region(
             source, self.get_region_from_player(misc_tools.get_player_from_src(source))
@@ -303,7 +311,6 @@ class AddDelCommand(AbstractSubCommand):
         list_comp = ListComponent(
             regions.items(), region_line_factory, self.config.default_item_per_page
         )
-        list_text = list_comp.get_page_rtext(page, item_per_page=item_per_page)
         full_text = [
             self.rtr(f"{LIST}.title.text"),
             get_rfum_comp_prefix(
@@ -315,15 +322,12 @@ class AddDelCommand(AbstractSubCommand):
                     amount=len(regions),
                 )
             ),
-        ]
-        if list_text is not None:
-            full_text.append(list_text)
-        full_text.append(
+            *list_comp.get_page_line_list(page, item_per_page=item_per_page),
             list_comp.get_page_hint_line(
                 page,
                 item_per_page=item_per_page,
                 command_format=f"{current_prefix} {LIST} "
                 + self.get_list_command_args_format(),
             )
-        )
+        ]
         source.reply(get_rfum_comp_prefix(*full_text, divider="\n"))

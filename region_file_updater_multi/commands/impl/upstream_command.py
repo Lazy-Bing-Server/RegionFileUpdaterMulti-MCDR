@@ -160,7 +160,6 @@ class UpstreamCommand(AbstractSubCommand):
                     )
                 )
             )
-        list_text = list_comp.get_page_rtext(page, item_per_page=item_per_page)
         valid_upstream_count = len(
             list(
                 filter(
@@ -178,17 +177,14 @@ class UpstreamCommand(AbstractSubCommand):
                     valid=valid_upstream_count,
                 )
             ),
-        ]
-        if list_text is not None:
-            full_text.append(list_text)
-        full_text.append(
+            *list_comp.get_page_line_list(page, item_per_page=item_per_page),
             list_comp.get_page_hint_line(
                 page,
                 item_per_page=item_per_page,
                 command_format=f"{current_cmd_prefix} {UPSTREAM} {LIST} "
                 + self.get_list_command_args_format(),
             )
-        )
+        ]
         source.reply(get_rfum_comp_prefix(*full_text, divider="\n"))
 
     def set_upstream(self, source: CommandSource, context: CommandContext):

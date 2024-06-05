@@ -82,7 +82,9 @@ class BlossomSerializable(RFUMSerializable):
 class ConfigurationBase(BlossomSerializable):
     @staticmethod
     def get_template(
-        rfum: "RegionFileUpdaterMulti", path: PathLike
+        rfum: "RegionFileUpdaterMulti",
+        path: PathLike,
+        supress_template_not_found_warning: bool = True,
     ) -> yaml.CommentedMap:
         rt_yaml = yaml.YAML(typ="rt")
         rt_yaml.width = 1048576
@@ -90,7 +92,8 @@ class ConfigurationBase(BlossomSerializable):
             with rfum.server.open_bundled_file(str(path)) as f:
                 return rt_yaml.load(f)
         except Exception as e:
-            rfum.logger.warning("Template not found, is plugin modified?", exc_info=e)
+            if not supress_template_not_found_warning or rfum.verbosity:
+                rfum.logger.warning("Template not found, is plugin modified?", exc_info=e)
             return yaml.CommentedMap()
 
     @classmethod
@@ -150,7 +153,11 @@ class ConfigurationBase(BlossomSerializable):
 
         if needs_save:
             # Saving config
-            result_config.save(rfum, encoding=encoding)
+            result_config.save(
+                rfum,
+                encoding=encoding,
+                supress_template_not_found_warning=supress_template_not_found_warning
+            )
 
         log(
             "server_interface.load_config_simple",
@@ -165,6 +172,7 @@ class ConfigurationBase(BlossomSerializable):
         file_path: PathLike = CONFIG_FILE,
         bundled_template_path: PathLike = SELF_PLUGIN_CFG_TEMPLATE_PATH,
         encoding: str = "utf8",
+        supress_template_not_found_warning: bool = True,
     ):
         def log(
             translation_key,

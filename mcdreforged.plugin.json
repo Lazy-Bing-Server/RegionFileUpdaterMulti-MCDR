@@ -1,6 +1,6 @@
 {
     "id": "region_file_updater_multi",
-    "version": "1.0.1-dev+build.240605",
+    "version": "1.0.1",
     "name": "Region File Updater Multi",
     "description": {
         "en_us": "A MCDR plugin to update region files in game from multiple locations",
@@ -11,8 +11,7 @@
     ],
     "link": "https://github.com/Lazy-Bing-Server/RegionFileUpdaterMulti-MCDR",
     "dependencies": {
-        "mcdreforged": ">=2.12.0",
-        "minecraft_data_api": "*"
+        "mcdreforged": ">=2.12.0"
     },
     "resources": [
         "LICENSE", "lang"

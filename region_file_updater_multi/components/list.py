@@ -6,6 +6,7 @@ from mcdreforged.api.all import *
 from region_file_updater_multi.commands.tree_constants import LIST
 from region_file_updater_multi.utils.misc_tools import RFUMInstance
 from region_file_updater_multi.components.misc import get_rfum_comp_prefix
+from region_file_updater_multi.mcdr_globals import MessageText
 
 
 T = TypeVar("T")
@@ -53,18 +54,17 @@ class ListComponent(Generic[T]):
         RFUMInstance.get_rfum().verbose(f"Head: {head_index} Tail: {tail_index}")
         return head_index, tail_index
 
-    def get_page_rtext(
+    def get_page_line_list(
         self,
         page: int,
         force_refresh: bool = False,
         item_per_page: Optional[int] = None,
-    ):
+    ) -> List[MessageText]:
         if force_refresh:
             self.clear_cache()
         if page > self.get_max_page(item_per_page=item_per_page):
-            return None
-        text_list = self.build(*self.get_head_tail_index(page, item_per_page))
-        return RTextBase.join("\n", text_list)
+            return []
+        return self.build(*self.get_head_tail_index(page, item_per_page))
 
     def get_page_hint_line(
         self,

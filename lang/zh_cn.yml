@@ -199,6 +199,7 @@ region_file_updater_multi:
       error:
         invalid_dimension: 无效维度 "{}"
         not_a_player: 该操作仅供玩家执行
+        api_not_installed: 未安装 Minecraft Data API
       added: §d添加了§r区域 §b{}§r
       removed: §d移除了§r区域 §b{}§r
       existed: 区域 §b{}§c 已经添加过了§r

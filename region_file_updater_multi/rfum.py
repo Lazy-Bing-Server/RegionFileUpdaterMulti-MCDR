@@ -93,6 +93,10 @@ class RegionFileUpdaterMulti:
         if verbosity:
             self.verbose("Verbose mode is enabled")
 
+    @property
+    def verbosity(self):
+        return self.__verbosity
+
     def verbose(self, msg: str):
         if isinstance(self.logger, MCDReforgedLogger):
             self.logger.debug(msg, no_check=self.__verbosity)

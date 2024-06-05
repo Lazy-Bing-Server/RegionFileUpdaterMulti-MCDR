@@ -49,6 +49,9 @@ class OnlinePlayers:
             if not self.__rfum.server.is_server_startup():
                 return
             api = self.__rfum.server.get_plugin_instance(MINECRAFT_DATA_API)
+            if api is None:
+                self.__rfum.logger.warning("Minecraft Data API is not installed, some function may not work properly")
+                return
             timeout = self.__rfum.config.get_mc_data_api_timeout()
             self.__rfum.verbose(f"Minecraft Data API timeout = {timeout}")
             player_tuple = api.get_server_player_list(timeout=timeout)

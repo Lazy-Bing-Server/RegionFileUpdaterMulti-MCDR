@@ -90,16 +90,12 @@ class HistoryCommand(AbstractSubCommand):
         text = [
             self.rtr(f"{HISTORY}.{LIST}.title"),
             get_rfum_comp_prefix(self.rtr(f"{HISTORY}.{LIST}.amount", len(regions))),
-        ]
-        list_text = list_comp.get_page_rtext(page, item_per_page=item_per_page)
-        if list_text is not None:
-            text.append(list_text)
-        text.append(
+            *list_comp.get_page_line_list(page, item_per_page=item_per_page),
             list_comp.get_page_hint_line(
                 page,
                 item_per_page=item_per_page,
                 command_format=f"{current_prefix} {HISTORY} list "
                 + self.get_list_command_args_format(),
             )
-        )
+        ]
         source.reply(get_rfum_comp_prefix(*text, divider="\n"))

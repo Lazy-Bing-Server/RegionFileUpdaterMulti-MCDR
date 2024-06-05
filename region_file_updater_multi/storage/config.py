@@ -85,9 +85,21 @@ class Config(ConfigurationBase):
             "survival_qb": Upstream.get_default(),
         }
         dimension_mca_files: Dict[str, Union[str, List[str]]] = {
-            "-1": ["DIM{dim}/region/r.{x}.{z}.mca", "DIM{dim}/poi/r.{x}.{z}.mca"],
-            "0": ["region/r.{x}.{z}.mca", "poi/r.{x}.{z}.mca"],
-            "1": ["DIM{dim}/region/r.{x}.{z}.mca", "DIM{dim}/poi/r.{x}.{z}.mca"],
+            "-1": [
+                "DIM{dim}/region/r.{x}.{z}.mca",
+                "DIM{dim}/poi/r.{x}.{z}.mca",
+                "DIM{dim}/entities/r.{x}.{z}.mca"
+            ],
+            "0": [
+                "region/r.{x}.{z}.mca",
+                "poi/r.{x}.{z}.mca",
+                "entities/r.{x}.{z}.mca"
+            ],
+            "1": [
+                "DIM{dim}/region/r.{x}.{z}.mca",
+                "DIM{dim}/poi/r.{x}.{z}.mca",
+                "DIM{dim}/entities/r.{x}.{z}.mca"
+            ],
         }
 
     paths: Paths = Paths.get_default()
