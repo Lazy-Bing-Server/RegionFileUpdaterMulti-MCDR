@@ -37,14 +37,15 @@ Configure this plugin before loading it, or it will be prevented from loading by
     if world save directory structure is modified by mods or it has been updated by Mojang, edit:
     - `dimension_mca_files` path to region mca files of each dimensions
 
-    > [!WARNING]
-    > Upstreams should be confirmed to be valid minecraft world save
-    > 
-    > RFUMulti barely validate if its paths are available, the world save structure won't be checked
-    >
-    > Enabling `remove_file_while_not_found` in `update_operation` section is suggested if you have confirmed all the upstreams.
-    > 
-    > Enabling it will make it intuitive. (Reason is explained in [config](config.md#update-operation)). It's disabled by default in order to avoid any accident.
+> [!WARNING]
+> 
+> Upstreams should be confirmed to be valid minecraft world save
+> 
+> RFUMulti barely validate if its paths are available, the world save structure won't be checked
+>
+> Enabling `remove_file_while_not_found` in `update_operation` section is suggested if you have confirmed all the upstreams.
+> 
+> Enabling it will make it intuitive. (Reason is explained in [config](config.md#update-operation)). It's disabled by default in order to avoid any accident.
 
 2. Enable the plugin, set item `enabled` to `true`
 
