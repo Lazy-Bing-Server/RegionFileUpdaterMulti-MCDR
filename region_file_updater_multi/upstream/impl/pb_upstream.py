@@ -149,8 +149,15 @@ class PrimeBackupUpstream(AbstractUpstream):
         self.__rfum.file_utilities.safe_ensure_dir(target_dir_path)
         if os.path.exists(target_file_path):
             self.__rfum.file_utilities.recycle(target_file_path)
+        decoding = (
+            self.__rfum.config.get_popen_decoding()
+            or self.__rfum.server.get_mcdr_config().get(MCDR_CFG_DECODING_KEY)
+            or "utf8"
+        )
         command = [
             config.get_python_executable(),
+            "-X",
+            decoding,
             self.get_pb_path(self.__rfum),
             "-d",
             self.__path,
