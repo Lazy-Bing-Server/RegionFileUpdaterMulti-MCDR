@@ -33,13 +33,13 @@ Python 模块需求请阅 [requirements.txt](requirements.txt)，使用指令 `p
 
 ## 文档
 
-懒得烤了，欢迎PR
+> 现在有完整中文文档了，欢迎阅览
 
-[快速上手（英文）](docs/quick_start.md)
+[快速上手](docs/zh/quick_start.md)
 
-[配置文件（英文）](docs/config.md)
+[配置文件](docs/zh/config.md)
 
-[指令用法（英文）](docs/command.md)
+[指令用法](docs/zh/command.md)
 
 ## 鸣谢
 
