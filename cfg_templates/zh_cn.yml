@@ -1,0 +1,157 @@
+# Region File Updater Multi (RFUMulti) 配置文件
+# 配置手册: https://github.com/Lazy-Bing-Server/RegionFileUpdaterMulti-MCDR/blob/master/docs/config.md
+# 此处注释仅供参考，多次加载该配置文件后这里的注释可能会乱掉
+# 本模板仅为样例，暂未计划加入插件包
+
+# =============================
+# |          通用配置          |
+# =============================
+
+# RFUMulti 的总开关
+# 设置为 "true" 以启用本插件
+enabled: false
+
+# 设置 RFUMulti 是否加载自定义语言文件
+# 外部语言文件目录: config/region_file_updater_multi/lang
+# 启用后，可将自定义语言文件放置于这个目录中
+# 文件名格式: {语言区域}.yml （如 "en_us.yml"）
+# 语言键名可在插件包里 "lang" 文件夹下找到
+load_custom_translation: true
+
+# 在 RFUMulti 任意列表页面的每页项目数
+default_item_per_page: 10
+
+# =============================
+# |          指令配置          |
+# =============================
+command:
+  # 指令前缀
+  # 在此设置你偏好的指令前缀
+  # 例: command_prefix: '!!rfum' -> !!rfum add / !!rfum update
+  command_prefix:
+    - '!!rfum'
+    - '!!region'
+
+  # 各指令的权限需求
+  # 不具备此处配置的权限的玩家不可执行对应的指令
+  permission:
+    reload: 2
+    add: 0
+    del: 0
+    del-all: 1
+    list: 0
+    history: 1
+    update: 2
+    group: 2
+    upstream: 3
+
+# =============================
+# |          更新配置          |
+# =============================
+update_operation:
+  # 执行更新 (update) 指令时:
+  # 若禁用该项，更新倒计时将立即启动
+  update_requires_confirm: true
+  # 上述配置项启用时，最多等待确认的时间
+  confirm_time_wait: 1m
+  # 更新倒计时长，倒计时窗口中仍可取消更新操作
+  update_delay: 10s
+
+  # Prime Backup 运行配置
+  # RFUMulti 用下列格式匹配 PB 运行日志来确定文件是否存在于 PB 数据库当中
+  # 仅当 PB 变更了文件不存在场景下的日志格式时需要配置此项
+  # 【作者汉化注】说白了跟 MCDR 的 Handler 干的活是类似的
+  prime_backup_file_not_found_log_format:
+    - "File '{file_name}' in backup #{backup_id:d} does not exist"
+
+  # 该配置项启用且上游中找不到指定的文件时，原来的文件也会被删除
+  # 确认上游有效性之后，强烈建议启用改配置
+  # 更新一个未生成区域时，删除文件是预期中的行为
+  remove_file_while_not_found: false
+
+# =============================
+# |          路径配置          |
+# =============================
+paths:
+  # Prime Backup 插件包的路径
+  # 这里填写的文件名称应该类似于 'PrimeBackup-v*.pyz'
+  # 该配置项仅在当前 MCDR 实例没有安装 PB 时需要配置
+  # 需要 PB 版本 >=1.7
+  pb_plugin_package_path:
+
+  # 目标存档目录
+  # 即当前世界存档位置
+  destination_world_directory: ./server/world
+
+  # 当前上游名称
+  # 游戏内也可以选
+  current_upstream: survival_pb
+
+  # 上游路径
+  upstreams:
+    # 基本写法:
+    # <上游名称>:
+    #   type: "prime_backup" 对应 PB 数据库, "world" 对应世界存档路径
+    #   path: path_to/prime_backup.db     | path_to/server_folder (存档的上层目录)
+    #   world_name: 世界存档文件夹的名称
+
+    # 请注意如果你的存档目录是 "../survival/server/world"
+    # 此处的 "path" 应该写上级目录: "../survival/server", 而非它的完整路径!!!
+    # 这条提示仅对 "type" 为 "world" 时有效
+    # 对于 PB 数据库, 就写 prime_backup.db 的路径就行了
+
+    # 以下是两个例子:
+    survival_pb:
+      type: prime_backup
+      path: ../survival/pb_files/prime_backup.db
+      world_name: world
+    survival_qb:
+      type: world
+      path: ../survival/qb_multi/slot1
+      world_name: world
+
+  # 为使这个插件适配不同版本的 Minecraft
+  # 可在此处添加文件路径格式
+  # 亦可添加自定义维度以提供支持
+  # 就写它的命名空间 ID: my_datapack:my_custom_dims
+  dimension_mca_files:
+    '-1':
+      - DIM{dim}/region/r.{x}.{z}.mca
+      - DIM{dim}/poi/r.{x}.{z}.mca
+      - DIM{dim}/entities/r.{x}.{z}.mca
+    '0':
+      - region/r.{x}.{z}.mca
+      - poi/r.{x}.{z}.mca
+      - entities/r.{x}.{z}.mca
+    '1':
+      - DIM{dim}/region/r.{x}.{z}.mca
+      - DIM{dim}/poi/r.{x}.{z}.mca
+      - DIM{dim}/entities/r.{x}.{z}.mca
+
+# =============================
+# |          保护设置          |
+# =============================
+region_protection:
+  # 区域保护主开关
+  # 启用后, 使用指令 '<prefix> group permission' 可保护组内的区域不受更新
+  enable_group_update_permission_check: true
+
+  # 禁用后，添加区域组到更新列表中时，不再单独检查组内区域的更新权限
+  check_add_groups: true
+
+  # 启用后，从更新列表中移除区域也会受到检查
+  check_del_operations: false
+
+  # 若玩家执行了一条指令，将剥夺自己的管理员权限
+  # 这条命令会被要求执行两次以避免操作失误
+  # 若此处设定的时间内命令还没得到重复，命令执行将终止
+  permission_modify_repeat_wait_time: 1m
+
+  # 启用该项以禁止该插件提示的任意警告信息
+  suppress_warning: false
+
+# =====================================
+# |          调试与实验性功能           |
+# =====================================
+# 如果插件工作一切正常，那你就没必要知道这里有啥
+experimental:

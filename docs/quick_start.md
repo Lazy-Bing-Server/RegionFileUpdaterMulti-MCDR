@@ -1,37 +1,41 @@
+**English** | [中文](zh/quick_start.md)
+
 # Quick start
 
 ## Install
 
 ### Prepare
 
-Region File Updater Multi is a [MCDReforged](https://mcdreforged.com) plugin, you must install MCDR and initialize a MCDR server before using
+Region File Updater Multi (RFUMulti) is a [MCDReforged](https://mcdreforged.com) plugin, you must install MCDR and initialize a MCDR server before using
 
 More details go to [MCDReforged document](https://docs.mcdreforged.com/en/latest/quick_start.html)
 
 ### Install Python requirements
 
-Region File Updater Multi requires a few python libraries to run, they are all listed in the [requirements.txt]((https://github.com/TISUnion/PrimeBackup/blob/master/requirements.txt))
+RFUMulti requires a few python libraries to run, they are all listed in the [requirements.txt]((https://github.com/TISUnion/PrimeBackup/blob/master/requirements.txt))
 
 Use command `pip3 install -r requirements.txt`  to install all required Python requirements
 
 ### Install Plugin & dependency
 
-Region File Updater Multi requires [MinecraftDataAPI](https://github.com/MCDReforged/MinecraftDataAPI) to run
+RFUMulti requires [MinecraftDataAPI](https://github.com/MCDReforged/MinecraftDataAPI) (optional)
 
 Just put MinecraftDataAPI and RegionFileUpdaterMulti in MCDReforged plugin directory, install their Python requirements
 
+Start MCDR, and execute command `!!MCDR r plg` to load new plugins, RFUMulti will generate config file and unload itself
 
 ## Configure
 
 Configure this plugin before loading it, or it will be prevented from loading by itself
 
+RFUMulti config path: `config/region_file_updater_multi/config.yml`
 
 1. Configure section `paths` correctly (docs goes [here](config.md#paths))
 
     - `destdestination_world_directory`: current server world save folder path
     - `upstreams`: the world saves or pb databases you want to update from
     
-    if Prime Backup is not installed in current MCDR instance, and you want to user PB upstreams, the following path is required:
+    if Prime Backup (>=1.7.0) is not installed in current MCDR instance, and you want to user PB upstreams, the following path is required:
     - `pb_plugin_package_path` path to Prime Backup plugin file
     
     if world save directory structure is modified by mods or it has been updated by Mojang, edit:
@@ -51,7 +55,7 @@ Configure this plugin before loading it, or it will be prevented from loading by
 
 ## Load
 
-Use `!!MCDR reload plugin` command to load it 
+Use `!!MCDR reload plugin` command again to load it 
 
 Use `!!region` / `!!rfum` (if prefixes is not edited in config, or use your own custom prefix) to check if it's loaded
 

@@ -142,3 +142,6 @@ dmypy.json
 
 # Minecraft Data API
 /minecraft_data_api
+
+# Customized
+*.disabled

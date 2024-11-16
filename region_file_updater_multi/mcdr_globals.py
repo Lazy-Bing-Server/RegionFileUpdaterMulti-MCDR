@@ -63,7 +63,7 @@ SELF_PLUGIN_NAME_SHORT = "RFU_Multi"
 TRANSLATION_KEY_PREFIX = SELF_PLUGIN_ID + "."
 
 SELF_PLUGIN_PACKAGE_PATH = os.path.dirname(os.path.dirname(__file__))
-SELF_PLUGIN_CFG_TEMPLATE_PATH = os.path.join("resources", "default_cfg.yml")
+SELF_PLUGIN_CFG_TEMPLATE_PATH = "cfg_templates"
 
 MINECRAFT_DATA_API = "minecraft_data_api"
 
@@ -102,3 +102,6 @@ class PrimeBackupLogParsingArguments(SingleArg, Enum):
     SEC_DECIMAL = "ss_decimal", "{ss_decimal:3d}"
     LEVEL = "level", "{level}"
     MSG = "msg", "{msg}"
+
+    def __str__(self):
+        return self.default_format

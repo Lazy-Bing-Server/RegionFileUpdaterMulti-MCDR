@@ -2,7 +2,8 @@ import json
 import os
 import re
 from logging import Logger
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, List, Dict, Any
+from types import MethodType
 
 from mcdreforged.api.all import *
 from ruamel import yaml
@@ -61,6 +62,7 @@ class RegionFileUpdaterMulti:
 
     def load_config(self):
         self.config = Config.load(self)
+        self.verbose("PB log format = {}".format(self.config.get_pb_log_format()))
         return self.config
 
     def save_config(self):
@@ -70,6 +72,9 @@ class RegionFileUpdaterMulti:
 
     def get_data_folder(self):
         return self.server.get_data_folder()
+
+    def get_mcdr_language(self):
+        return self.server.get_mcdr_language()
 
     def set_log(self, file_name: str):
         self.unset_log()
@@ -89,8 +94,19 @@ class RegionFileUpdaterMulti:
         return self.__logger
 
     def __set_verbosity(self, verbosity: bool):
+        def debugger(self_: "MCDReforgedLogger", msg: Any, *args, **kwargs):
+            try:
+                from mcdreforged.utils.logger import MCColorFormatControl
+                import logging
+
+                with MCColorFormatControl.disable_minecraft_color_code_transform():
+                    self_._log(logging.DEBUG, msg, args, **kwargs, stacklevel=2)
+            except:
+                pass
+
         self.__verbosity = verbosity
         if verbosity:
+            self.logger.debug = MethodType(debugger, self.logger)
             self.verbose("Verbose mode is enabled")
 
     @property
@@ -98,10 +114,7 @@ class RegionFileUpdaterMulti:
         return self.__verbosity
 
     def verbose(self, msg: str):
-        if isinstance(self.logger, MCDReforgedLogger):
-            self.logger.debug(msg, no_check=self.__verbosity)
-        else:
-            self.logger.debug(msg)
+        self.logger.debug(msg)
 
     def htr(
         self,

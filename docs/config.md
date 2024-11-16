@@ -1,3 +1,5 @@
+**English** | [中文](zh/config.md)
+
 # Configuration
 
 Region file updater multi config path: `config/region_file_updater_multi/config.yml`
@@ -78,9 +80,9 @@ Contains a series of settings during update operations
 
     Type: `List[str]`
     
-    RFUM now check Prime Backup stdout log to determine whether this file is found in the provided backup of the database
+    RFUMulti now check Prime Backup stdout log to determine whether specified file is found in the provided backup of the database
     
-    Modify this value to make it compatible with different version of PB logs
+    Modify this value to make it compatible with different version of PB logs (if format changes)
 
 - `remove_file_while_not_found`
 
@@ -105,6 +107,8 @@ Contains settings of plugin-related paths
     Just leave it blank when this MCDR instance have PB installed
     
     Otherwise, you should set a PB plugin path to extract files from PB databases
+
+    Requires Prime Backup not earlier than version 1.7
 
 - `destination_world_directory`
 
@@ -150,12 +154,15 @@ Contains settings of plugin-related paths
             '-1':
               - DIM{dim}/region/r.{x}.{z}.mca
               - DIM{dim}/poi/r.{x}.{z}.mca
+              - DIM{dim}/entities/r.{x}.{z}.mca
             '0':
               - region/r.{x}.{z}.mca
               - poi/r.{x}.{z}.mca
+              - entities/r.{x}.{z}.mca
             '1':
               - DIM{dim}/region/r.{x}.{z}.mca
               - DIM{dim}/poi/r.{x}.{z}.mca
+              - DIM{dim}/entities/r.{x}.{z}.mca
     
             # Add your custom dimensions here
             # For example:
@@ -186,7 +193,7 @@ Some region permission settings, actual protection operation should be performed
 
     Type: `bool`
     
-    If enabled, **removing** protected regions (and groups if `check_add_groups` enabled) from update list will be prevented
+    If enabled, **removing** protected regions from update list will be prevented
 
 - `permission_modify_repeat_wait_time`
 
@@ -203,7 +210,7 @@ Some region permission settings, actual protection operation should be performed
     Supress the warning when a region in a not protected group being adding to the update list
 
 
-## Debug
+## Experimental
 
 > [!WARNING]
 > If you don't know what you are doing, stop trying to edit this section of config
@@ -218,4 +225,4 @@ If you really need to edit these items, just read the codes in class `region_fil
 
 [Quick start](quick_start.md)
 
-[Configuration](config.md)
+[Command usage](command.md)

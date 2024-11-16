@@ -1,3 +1,5 @@
+**English** | [中文](zh/command.md)
+
 # Command
 
 Command prefixes by default: `!!rfum` or `!!region` (can be modified in config)
@@ -9,7 +11,7 @@ Actually almost all the steps can be performed by click, all you need to do is j
 
 ## General Arguments
 
-All the `list` command nodes support page index arguments:
+All the `list` command nodes support `[page_args]`:
 
 - `--page <page_num>` Select current page index
 - `--per-page <item_count>` Set item count per page
@@ -38,7 +40,7 @@ All the `list` command nodes support page index arguments:
 
     Add regions or groups to update list
     - `add group <group_name>` Add specified group
-    - Barely `add` Add current region (only players can use)
+    - Barely `add` Add current region (only players can use, requires Minecraft Data API to run)
     - `add <x> <z> <dimension>` Add specified region
 
     Adding regions in other group may be denied or warned. That depends on group policies
@@ -112,14 +114,14 @@ All the `list` command nodes support page index arguments:
 
     If a permission modification will deprive your own admin privilege in this group, this command should be called twice in order to avoid any mistakes
     
-    You can also add `--confirm` argument to force executing it
+    You can also add `--confirm` argument to force executing it without repeating it
 
 12. `debug`
 
     > [!WARNING]
     > If you don't know what you are doing, stop trying to use them
 
-    These commands are not prepared for normal users and must be enabled in `debug` section of config to use them
+    These commands are not prepared for normal users and must be enabled in `experimental` section of config to use them
 
     If you really need to use them, just read the codes in `region_file_updater_multi.commands.impl.debug_commands.DebugCommands.add_children_for()`
 
@@ -128,4 +130,4 @@ All the `list` command nodes support page index arguments:
 
 [Quick start](quick_start.md)
 
-[Command usage](command.md)
+[Configuration](config.md)
