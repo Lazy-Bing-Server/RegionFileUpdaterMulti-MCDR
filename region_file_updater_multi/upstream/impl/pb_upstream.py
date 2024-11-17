@@ -107,12 +107,12 @@ class PrimeBackupUpstream(AbstractUpstream):
 
     def parse_log_line(
         self,
-        pattern: List[str],
+        patterns: List[str],
         text: str,
         target_items: List[str],
         allow_not_found: bool = True,
     ):
-        for p in pattern:
+        for p in patterns:
             result = parse(p, text)
             if result is not None:
                 return_items = {}
@@ -191,15 +191,16 @@ class PrimeBackupUpstream(AbstractUpstream):
                     line_text = line_buf.decode(decoding).strip()
                     logger.info(line_text)
                     if result is None:
-                        msg = self.parse_log_line(
+                        step_1_result = self.parse_log_line(
                             log_fmt,
                             line_text,
                             [PrimeBackupLogParsingArguments.MSG.identifier],
                             allow_not_found=False,
-                        )[PrimeBackupLogParsingArguments.MSG.identifier]
-                        self.__rfum.verbose(f"Parsed message: {msg}")
-                        if msg is None:
+                        )
+                        if step_1_result is None:
                             continue
+                        msg = step_1_result[PrimeBackupLogParsingArguments.MSG.identifier]
+                        self.__rfum.verbose(f"Parsed message: {msg}")
                         # Target text: File 'world/level.data' in backup #4 does not exist
                         file_name_name = "file_name"
                         backup_id_name = "backup_id"

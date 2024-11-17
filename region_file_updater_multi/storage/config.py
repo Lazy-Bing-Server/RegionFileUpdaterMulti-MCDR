@@ -157,7 +157,7 @@ class Config(ConfigurationBase):
     def get_popen_terminate_timeout(self):
         return self.get_debug_options().get("popen_terminate_timeout", 5)
 
-    def get_pb_log_format(self):
+    def get_pb_log_format(self) -> List[str]:
         args = PrimeBackupLogParsingArguments
         return self.get_debug_options().get(
             "prime_backup_log_format",

@@ -1,0 +1,156 @@
+# Region File Updater Multi (RFUMulti) config
+# Config manual: https://github.com/Lazy-Bing-Server/RegionFileUpdaterMulti-MCDR/blob/master/docs/config.md
+# Comments here for reference only, these comments may be messed up after loading so much times
+# This template is only a sample, not scheduled adding it to packed plugin
+
+# ===========================================
+# |          General Configuration          |
+# ===========================================
+
+# Main switch of RFUMulti
+# Set it to 'true' to enable
+enabled: false
+
+# Decides if RFUMulti loads custom translation
+# External language folder: config/region_file_updater_multi/lang
+# After enabled, place your translations in this folder
+# File name format: {locale}.yml (like 'en_us.yml')
+# Language keys could be found in plugin archive 'lang' folder
+load_custom_translation: true
+
+# Item count per page in any list page of RFUMulti
+default_item_per_page: 10
+
+# ===========================================
+# |          Command Configuration          |
+# ===========================================
+command:
+  # Command prefix
+  # Set your preferred command prefixes here
+  # eg: command_prefix: '!!rfum' -> !!rfum add / !!rfum update
+  command_prefix:
+    - '!!rfum'
+    - '!!region'
+
+  # Permission level requirements for each commands
+  # Players does not have the level configured here are banned to execute the corresponding command
+  permission:
+    reload: 2
+    add: 0
+    del: 0
+    del-all: 1
+    list: 0
+    history: 1
+    update: 2
+    group: 2
+    upstream: 3
+
+# ==========================================
+# |          Update Configuration          |
+# ==========================================
+update_operation:
+  # When executing update command:
+  # Update countdown will start immediately if disabled
+  update_requires_confirm: true
+  # If 'update_requires_confirm' enabled, the longest waiting time for confirm
+  confirm_time_wait: 1m
+  # Update countdown duration, update operation can still be cancelled in this window
+  update_delay: 10s
+
+  # If this is enabled and file is not found in upstream, original file will be deleted
+  # It's suggested to enable this after upstreams are validated
+  # Removing file is the intended operation while updating a not generated region
+  remove_file_while_not_found: false
+
+  # Prime Backup running config
+  # RFUMulti matches PB log with these format here to determine if the file exists in PB databases
+  # ONLY change this when PB change its log format of 'file not exist' scene
+  prime_backup_file_not_found_log_format:
+    - "File '{file_name}' in backup #{backup_id:d} does not exist"
+
+# =========================================
+# |          Paths Configuration          |
+# =========================================
+paths:
+  # Prime Backup plugin package path
+  # File name should be like 'PrimeBackup-v*.pyz' here
+  # ONLY configure this item when PB is not installed in this MCDR instance
+  # Requires PB version >= 1.7
+  pb_plugin_package_path:
+
+  # Destination world directory
+  # Your current server world save location
+  destination_world_directory: ./server/world
+
+  # The current upstream
+  # This can also be selected in game
+  current_upstream: survival_pb
+
+  # Upstream paths
+  upstreams:
+    # Usage:
+    # <upstream_name>:
+    #   type: 'prime_backup for' PB database path, 'world' for world save directory path
+    #   path: path_to/prime_backup.db            | path_to/server_folder
+    #   world_name: folder name of world save
+
+    # Note that if world save folder is '../survival/server/world'
+    # 'path' here should be its parent directory: '../survival/server', NOT its full path!!!
+    # This tips only effective when 'type' is 'world'
+    # For PB database, just fill it with path to prime_backup.db
+
+    # Examples:
+    survival_pb:
+      type: prime_backup
+      path: ../survival/pb_files/prime_backup.db
+      world_name: world
+    survival_qb:
+      type: world
+      path: ../survival/qb_multi/slot1
+      world_name: world
+
+  # To make this plugin compatible to different version of Minecraft
+  # You can add file path format here
+  # Custom dimension could also be added here to support them
+  # Just use its namespace id like: my_datapack:my_custom_dims
+  dimension_mca_files:
+    '-1':
+      - DIM{dim}/region/r.{x}.{z}.mca
+      - DIM{dim}/poi/r.{x}.{z}.mca
+      - DIM{dim}/entities/r.{x}.{z}.mca
+    '0':
+      - region/r.{x}.{z}.mca
+      - poi/r.{x}.{z}.mca
+      - entities/r.{x}.{z}.mca
+    '1':
+      - DIM{dim}/region/r.{x}.{z}.mca
+      - DIM{dim}/poi/r.{x}.{z}.mca
+      - DIM{dim}/entities/r.{x}.{z}.mca
+
+# ==============================================
+# |          Protection Configuration          |
+# ==============================================
+region_protection:
+  # Group update protection main switch
+  # After enable this, use '<prefix> group permission' to protect your regions in group from updating
+  enable_group_update_permission_check: true
+
+  # If disabled, when adding a group to update list, regions in this group won't be checked
+  check_add_groups: true
+
+  # If enabled, removing anything from update list will also be checked
+  check_del_operations: false
+
+  # When player executes a command, depriving their own administrator privilege
+  # The command will be asked to execute twice in order to avoid any mistake
+  # If this command is not repeated after the period configured here, the execution will be cancelled
+  permission_modify_repeat_wait_time: 1m
+
+  # Enable this to suppress any warning message this plugin shows
+  suppress_warning: false
+
+# ==========================================
+# |          Debug & Experimental          |
+# ==========================================
+# You shouldn't know what it is if this plugin works fine
+experimental:

@@ -89,8 +89,13 @@ class ConfigurationBase(BlossomSerializable):
         rt_yaml = yaml.YAML(typ="rt")
         rt_yaml.width = 1048576
         try:
-            with rfum.server.open_bundled_file(str(path)) as f:
-                return rt_yaml.load(f)
+            file_path = os.path.join(str(path), f"{rfum.get_mcdr_language()}.yml")
+            try:
+                with rfum.server.open_bundled_file(file_path) as f:
+                    return rt_yaml.load(f)
+            except:
+                with rfum.server.open_bundled_file(os.path.join(str(path), "en_us.yml")) as f:
+                    return rt_yaml.load(f)
         except Exception as e:
             if not supress_template_not_found_warning or rfum.verbosity:
                 rfum.logger.warning("Template not found, is plugin modified?", exc_info=e)
@@ -122,6 +127,10 @@ class ConfigurationBase(BlossomSerializable):
         file_utils = rfum.file_utilities
         needs_save = False
         file_path = os.path.join(rfum.get_data_folder(), file_path)
+
+        if not os.path.isfile(file_path):
+            cls.get_default().save(rfum)
+            log("RFUMulti seems to be loaded the first time, generated config with default values...")
 
         # Load & Fix data
         try:
@@ -217,10 +226,22 @@ class ConfigurationBase(BlossomSerializable):
                     formatted_config = rt_yaml.load(
                         file_utils.lf_read(file_path, encoding=encoding)
                     )
+                    for k, v in formatted_config.copy().items():
+                        if k in config_content.keys():
+                            value = config_content.pop(k)
+                            if isinstance(v, yaml.CommentedMap):
+                                v.update(value)
+                            else:
+                                formatted_config[k] = value
+                    for k, v in config_content.items():
+                        formatted_config[k] = v
+
                 else:
-                    formatted_config = self.get_template(rfum, bundled_template_path)
-                for key, value in config_content.items():
-                    formatted_config[key] = value
+                    formatted_config = self.get_template(
+                        rfum,
+                        bundled_template_path,
+                        supress_template_not_found_warning=supress_template_not_found_warning,
+                    )
                 with file_utils.safe_write(config_temp_path, encoding=encoding) as f:  # type: io.StringIO
                     rt_yaml.dump(formatted_config, f)
                 try:
