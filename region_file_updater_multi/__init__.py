@@ -8,7 +8,8 @@ __rfum = RegionFileUpdaterMulti()
 
 
 def on_load(server: PluginServerInterface, prev_module) -> Any:
-    if not __rfum.config.enabled:
+    if __rfum.config.enabled:
+        __rfum.on_load(server, prev_module)
+    else:
         __rfum.logger.warning("RegionFileUpdaterMulti is disabled by config")
-        return __rfum.server.unload_plugin(__rfum.server.get_self_metadata().id)
-    __rfum.on_load(server, prev_module)
+        server.schedule_task(lambda: server.unload_plugin(server.get_self_metadata().id))
