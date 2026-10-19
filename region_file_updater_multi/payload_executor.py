@@ -84,12 +84,11 @@ class PayloadExecutor:
         def callback():
             try:
                 func()
-            finally:
-                if sys.exc_info()[0] is None:
-                    return
+            except Exception:
                 self.__rfum.logger.exception(
                     f"Unexpected error occurred in thread {threading.current_thread().name}"
                 )
+                raise
 
         self.__pool_executor.submit(callback)
 
