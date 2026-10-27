@@ -215,7 +215,7 @@ class PrimeBackupUpstream(AbstractUpstream):
                             raise PrimeBackupFileNotFound(result.get(file_name_name))
 
         process.wait(self.__rfum.config.get_popen_terminate_timeout())
-        if process.returncode != 0:
+        if process.returncode not in {0, 5}: # 0 -> successful, 5 -> file not found
             raise PrimeBackupProcessError(f"Prime Backup returned {process.returncode}")
         if not os.path.isfile(target_file_path):
             raise PrimeBackupFileNotFound(
