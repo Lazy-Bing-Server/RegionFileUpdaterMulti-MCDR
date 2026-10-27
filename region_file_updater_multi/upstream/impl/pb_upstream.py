@@ -144,6 +144,7 @@ class PrimeBackupUpstream(AbstractUpstream):
             self.__rfum.server,
             os.path.join(self.__rfum.get_data_folder(), CLI_STDOUT_LOG_FILE),
         )
+        src_file_path = os.path.join(self.__world_name, file_name)
         target_file_path = os.path.join(target_world_path, file_name)
         target_dir_path = os.path.dirname(target_file_path)
         self.__rfum.file_utilities.safe_ensure_dir(target_dir_path)
@@ -163,10 +164,11 @@ class PrimeBackupUpstream(AbstractUpstream):
             self.__path,
             "extract",
             "latest",
-            os.path.join(self.__world_name, file_name),
+            src_file_path,
             "-o",
             target_dir_path,
         ]
+        file_not_found_list = []
         with Popen(command, stderr=STDOUT, stdout=PIPE, stdin=PIPE) as process:
             self.__rfum.verbose(f'Process started: {" ".join(command)}')
             decoding = (
@@ -212,12 +214,24 @@ class PrimeBackupUpstream(AbstractUpstream):
                         )
                         self.__rfum.verbose(f"Parsed content: {result}")
                         if result is not None:
-                            raise PrimeBackupFileNotFound(result.get(file_name_name))
+                            file_not_found_list.append(result.get(file_name_name))
 
         process.wait(self.__rfum.config.get_popen_terminate_timeout())
-        if process.returncode not in {0, 5}: # 0 -> successful, 5 -> file not found
+
+        # About PrimeBackup return code
+        # See https://github.com/TISUnion/PrimeBackup/blob/v1.14.0/prime_backup/cli/return_codes.py
+        if process.returncode == 5:
+            if len(file_not_found_list) > 0:
+                files = ', '.join(file_not_found_list)
+            else:
+                files = src_file_path
+            raise PrimeBackupFileNotFound(
+                "PrimeBackup can't find file {} in latest backup".format(files)
+            )
+        elif process.returncode != 0:
             raise PrimeBackupProcessError(f"Prime Backup returned {process.returncode}")
+
         if not os.path.isfile(target_file_path):
             raise PrimeBackupFileNotFound(
-                "File not found after Prime Backup normal exits"
+                f"File {target_file_path} does not extracted correctly after PrimeBackup normal exits"
             )
