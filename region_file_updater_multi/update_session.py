@@ -165,7 +165,7 @@ class UpdateSession:
         def timed_out_handler():
             with self.__scheduler_lock:
                 self.scheduler_stop()
-                server.broadcast()   # TODO: Find out original purpose of this error usage
+                # server.broadcast()   # Removed useless broadcast
 
         acq = self.__session_pending_lock.acquire(blocking=False)
         if not acq:
