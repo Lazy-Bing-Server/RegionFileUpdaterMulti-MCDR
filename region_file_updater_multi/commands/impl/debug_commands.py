@@ -6,6 +6,7 @@ from region_file_updater_multi.commands.sub_command import AbstractSubCommand
 from region_file_updater_multi.commands.tree_constants import *
 from region_file_updater_multi.mcdr_globals import *
 from region_file_updater_multi.region_upstream_manager import Region
+from region_file_updater_multi.utils.misc_tools import reply
 
 
 class DebugCommands(AbstractSubCommand):
@@ -47,7 +48,7 @@ class DebugCommands(AbstractSubCommand):
 
     def debug_player_list(self, source: CommandSource):
         players = self.rfum.online_players.get_player_list()
-        source.reply(
+        reply(source, 
             "Players ({count}/{limit}) {players}".format(
                 count=len(players),
                 limit=self.rfum.online_players.get_player_limit(),
@@ -71,10 +72,10 @@ class DebugCommands(AbstractSubCommand):
                     allow_not_found=allow_not_found,
                 )
             except Exception as exc:
-                source.reply(f"Exception: {str(exc)}")
+                reply(source, f"Exception: {str(exc)}")
                 raise
             else:
-                source.reply("success")
+                reply(source, "success")
 
     def debug_extract_region(self, source: CommandSource, context: CommandContext):
         with self.rfum.file_utilities:
@@ -92,7 +93,7 @@ class DebugCommands(AbstractSubCommand):
                     allow_not_found=allow_not_found,
                 )
             except Exception as exc:
-                source.reply(f"Exception: {str(exc)}")
+                reply(source, f"Exception: {str(exc)}")
                 raise
             else:
-                source.reply("success")
+                reply(source, "success")

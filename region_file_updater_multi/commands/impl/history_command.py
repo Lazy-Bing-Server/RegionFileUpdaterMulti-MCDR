@@ -8,6 +8,7 @@ from region_file_updater_multi.components.misc import (
     datetime_tr,
 )
 from region_file_updater_multi.mcdr_globals import *
+from region_file_updater_multi.utils.misc_tools import reply
 
 
 class HistoryCommand(AbstractSubCommand):
@@ -38,7 +39,7 @@ class HistoryCommand(AbstractSubCommand):
         current_prefix = context.command.split(" ")[0]
         history = self.rfum.history.data
         if history is None:
-            return source.reply(get_rfum_comp_prefix(self.ctr("error.not_recorded")))
+            return reply(source, get_rfum_comp_prefix(self.ctr("error.not_recorded")))
         text = [
             self.rtr(f"{HISTORY}.result.title"),
             get_rfum_comp_prefix(
@@ -68,7 +69,7 @@ class HistoryCommand(AbstractSubCommand):
                 )
             ),
         ]
-        source.reply(get_rfum_comp_prefix(*text, divider="\n"))
+        reply(source, get_rfum_comp_prefix(*text, divider="\n"))
 
     def list_history_regions(self, source: CommandSource, context: CommandContext):
         page, item_per_page = self.get_list_args(context)
@@ -98,4 +99,4 @@ class HistoryCommand(AbstractSubCommand):
                 + self.get_list_command_args_format(),
             )
         ]
-        source.reply(get_rfum_comp_prefix(*text, divider="\n"))
+        reply(source, get_rfum_comp_prefix(*text, divider="\n"))

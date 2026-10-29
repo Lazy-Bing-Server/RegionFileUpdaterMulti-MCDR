@@ -125,6 +125,7 @@ class Config(ConfigurationBase):
         lost_permission_requires_confirm: bool
         minecraft_data_api_timeout: float
         enable_custom_language_filter: bool
+        split_line_break: bool
 
     experimental: Optional[Debug] = None
 
@@ -138,6 +139,9 @@ class Config(ConfigurationBase):
 
     def get_debug_options(self):
         return self.experimental or self.Debug.get_default()
+
+    def get_split_line_break(self):
+        return self.get_debug_options().get('split_line_break', False)
 
     def get_mc_data_api_timeout(self):
         return self.get_debug_options().get("minecraft_data_api_timeout", 10)
@@ -162,7 +166,8 @@ class Config(ConfigurationBase):
         return self.get_debug_options().get(
             "prime_backup_log_format",
             [
-                f"[{args.YEAR}-{args.MONTH}-{args.DAY} {args.HOUR}:{args.MINUTE}:{args.SECOND},{args.SEC_DECIMAL} {args.LEVEL}] {args.MSG}"
+                f"[{args.YEAR}-{args.MONTH}-{args.DAY} {args.HOUR}:{args.MINUTE}:{args.SECOND},{args.SEC_DECIMAL} {args.LEVEL}] {args.MSG}",
+                f"[{args.YEAR}-{args.MONTH}-{args.DAY} {args.HOUR}:{args.MINUTE}:{args.SECOND}.{args.SEC_DECIMAL} {args.LEVEL}] {args.MSG}"
             ],
         )
 
@@ -170,7 +175,7 @@ class Config(ConfigurationBase):
         return self.get_debug_options().get("thread_pool_executor_max_workers", 10)
 
     def get_attach_log_handler(self):
-        return self.get_debug_options().get("attach_plugin_log_handler", True)
+        return self.get_debug_options().get("attach_plugin_log_handler", False)
 
     def get_lost_permission_requires_confirm(self):
         return self.get_debug_options().get("lost_permission_requires_confirm", True)

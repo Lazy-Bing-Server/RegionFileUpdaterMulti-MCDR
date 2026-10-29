@@ -24,7 +24,7 @@ from region_file_updater_multi.utils.logging import (
     get_datetime_format,
 )
 from region_file_updater_multi.utils.online_players import OnlinePlayers
-from region_file_updater_multi.utils.misc_tools import RFUMInstance
+from region_file_updater_multi.utils.misc_tools import RFUMInstance, reply
 from region_file_updater_multi.commands.impl import *
 
 
@@ -47,6 +47,9 @@ class RegionFileUpdaterMulti:
             self.set_log(os.path.join(self.server.get_data_folder(), LOG_FILE))
 
         self.__set_verbosity(self.config.get_verbosity())
+        if self.config.get_split_line_break():
+            self.verbose("Split line break enabled")
+        self.verbose(f"Attach additional log handler status: {self.config.get_attach_log_handler()}")
         # self.verbose(self.config.update_operation.confirm_time_wait)
 
         self.online_players = OnlinePlayers(self)
@@ -94,9 +97,11 @@ class RegionFileUpdaterMulti:
         return self.__logger
 
     def __set_verbosity(self, verbosity: bool):
+        # Illegal interface use
+        # But no influence for any normal users
         def debugger(self_: "MCDReforgedLogger", msg: Any, *args, **kwargs):
             try:
-                from mcdreforged.utils.logger import MCColorFormatControl
+                from mcdreforged.logging.formatter import MCColorFormatControl
                 import logging
 
                 with MCColorFormatControl.disable_minecraft_color_code_transform():
@@ -274,7 +279,7 @@ class RegionFileUpdaterMulti:
                         self.server.register_translation(lang, translation_filter(data))
 
     def reply_reload_message(self, source: CommandSource):
-        source.reply(get_rfum_comp_prefix(self.rtr("command.reload.reloaded")))
+        reply(source, get_rfum_comp_prefix(self.rtr("command.reload.reloaded")))
 
     def on_load(self, server: "PluginServerInterface", prev_module):
         self.register_custom_translations()

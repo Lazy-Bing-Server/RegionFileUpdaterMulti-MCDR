@@ -3,16 +3,18 @@ import inspect
 import functools
 import threading
 
+from mcdreforged.api.rtext import RTextBase
 from mcdreforged.api.decorator import FunctionThread
 from mcdreforged.api.types import CommandSource, PlayerCommandSource
-from typing import Optional, Callable, Union, TYPE_CHECKING, Any, Type, TypeVar
+from typing import Optional, Callable, Union, TYPE_CHECKING, Any, Type, TypeVar, List
 from concurrent.futures.thread import ThreadPoolExecutor as ConcurrentTPE
 from apscheduler.executors.pool import ThreadPoolExecutor as APSchedulerTPE
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.schedulers.base import BaseScheduler
 
+from region_file_updater_multi.components.complex_text import RComplexText
 from region_file_updater_multi.mcdr_globals import (
-    SELF_PLUGIN_NAME_SHORT,
+    SELF_PLUGIN_NAME_SHORT, MessageText
 )
 
 if TYPE_CHECKING:
@@ -144,3 +146,35 @@ def get_scheduler(
         get_thread_pool_executor(is_apscheduler=True, thread_name_prefix=prefix)
     )
     return scheduler
+
+
+def split_rtext(any_text: RTextBase, divider: str, maxsplit: int = -1):
+    any_rtext = RComplexText.from_rtext(any_text).strip_format_codes()
+    return any_rtext.split(divider, maxsplit=maxsplit)
+
+
+def split_line_break(any_text: MessageText) -> List[MessageText]:
+    rfum = RFUMInstance.get_rfum()
+    if rfum is not None and rfum.config.get_split_line_break():
+        if isinstance(any_text, RTextBase):
+            return split_rtext(any_text, '\n')
+        else:
+            return str(any_text).split('\n')
+    else:
+        return [any_text]
+
+def say(text: MessageText):
+    rfum = RFUMInstance.get_rfum()
+    for line in split_line_break(text):
+        rfum.server.say(line)
+
+
+def broadcast(text: MessageText):
+    rfum = RFUMInstance.get_rfum()
+    for line in split_line_break(text):
+        rfum.server.broadcast(line)
+
+def reply(src: CommandSource, text: MessageText):
+    with src.preferred_language_context():
+        for line in split_line_break(text):
+            src.reply(line)
