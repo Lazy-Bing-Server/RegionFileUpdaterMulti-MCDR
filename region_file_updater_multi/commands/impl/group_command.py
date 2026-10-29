@@ -23,6 +23,7 @@ from region_file_updater_multi.region_upstream_manager import Region
 from region_file_updater_multi.utils.misc_tools import (
     get_player_from_src,
     get_scheduler,
+    reply
 )
 
 if TYPE_CHECKING:
@@ -130,7 +131,7 @@ class DefaultPermissionConfirmJob(AbstractRepeatConfirmJob):
         return self.__permission
 
     def timeout_action(self):
-        self.__source.reply(
+        reply(self.__source,
             get_rfum_comp_prefix(self.group_command.ctr("confirm_timeout"))
         )
 
@@ -329,7 +330,7 @@ class GroupCommand(AbstractSubCommand):
         return context[GROUP_NAME]
 
     def group_not_found(self, source: CommandSource, group_name: str):
-        source.reply(
+        reply(source, 
             get_rfum_comp_prefix(
                 self.ctr("error.not_found", group_name).set_color(RColor.red)
             )
@@ -340,7 +341,7 @@ class GroupCommand(AbstractSubCommand):
 
     def command_preview(self, source: CommandSource, context: CommandContext):
         prefix = context.command.split(" ")[0]
-        source.reply(
+        reply(source, 
             self.htr(
                 f"{GROUP}.{HELP}.overview",
                 pre=prefix,
@@ -385,7 +386,7 @@ class GroupCommand(AbstractSubCommand):
                 + self.get_list_command_args_format(),
             ),
         ]
-        source.reply(get_rfum_comp_prefix(*text, divider="\n"))
+        reply(source, get_rfum_comp_prefix(*text, divider="\n"))
 
     def info_group_list(self, source: CommandSource, context: CommandContext):
         current_prefix = context.command.split(" ")[0]
@@ -439,47 +440,51 @@ class GroupCommand(AbstractSubCommand):
                 + self.get_list_command_args_format(),
             )
         ]
-        source.reply(get_rfum_comp_prefix(*text, divider="\n"))
+        reply(source, get_rfum_comp_prefix(*text, divider="\n"))
 
     def create_group(self, source: CommandSource, context: CommandContext):
         group_name = context[NEW_GROUP_NAME]
         if self.is_present(group_name):
-            return source.reply(
+            return reply(source, 
                 get_rfum_comp_prefix(self.ctr("error.already_exists", group_name))
             )
         group = self.rfum.group_manager.create_group(group_name)
         if group is None:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(self.ctr("error.unknown").set_color(RColor.red))
             )
         else:
             if source.is_player:
                 group.set_permission(get_player_from_src(source), GroupPermission.admin)
-            source.reply(get_rfum_comp_prefix(self.ctr("created", group_name)))
+            reply(source, get_rfum_comp_prefix(self.ctr("created", group_name)))
 
     def delete_group(self, source: CommandSource, context: CommandContext):
         group_name = self.get_group_name(context)
         group = self.rfum.group_manager.get_group(group_name)
         if group is None:
-            return self.group_not_found(source, group_name)
+            self.group_not_found(source, group_name)
+            return
         if not group.is_src_admin(source):
-            return self.perm_denied(source)
+            self.perm_denied(source)
+            return
         group = self.rfum.group_manager.delete_group(group_name)
         if group is None:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(self.ctr("error.unknown").set_color(RColor.red))
             )
         else:
-            source.reply(get_rfum_comp_prefix(self.ctr("deleted", group_name)))
+            reply(source, get_rfum_comp_prefix(self.ctr("deleted", group_name)))
 
     def info_group(self, source: CommandSource, context: CommandContext):
         current_prefix = context.command.split(" ")[0]
         group_name = self.get_group_name(context)
         group = self.rfum.group_manager.get_group(group_name)
         if group is None:
-            return self.group_not_found(source, group_name)
+            self.group_not_found(source, group_name)
+            return
         if not group.is_src_admin(source):
-            return self.perm_denied(source)
+            self.perm_denied(source)
+            return
         text = [
             self.ctr("info.title", group_name),
             get_rfum_comp_prefix(
@@ -509,7 +514,7 @@ class GroupCommand(AbstractSubCommand):
                 )
             ),
         ]
-        source.reply(get_rfum_comp_prefix(*text, divider="\n"))
+        reply(source, get_rfum_comp_prefix(*text, divider="\n"))
 
     def __expand_group(self, source: CommandSource, group_name: str, region: Region):
         group = self.rfum.group_manager.get_group(group_name)
@@ -518,7 +523,7 @@ class GroupCommand(AbstractSubCommand):
         if not group.is_src_admin(source):
             return self.perm_denied(source)
         if region in group.regions:
-            return source.reply(
+            return reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr(
                         "error.region_exists", region=str(region), group=group_name
@@ -526,13 +531,13 @@ class GroupCommand(AbstractSubCommand):
                 )
             )
         if group.add_region(region):
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr("expanded", region=str(region), group=group_name)
                 )
             )
         else:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(self.ctr("error.unknown").set_color(RColor.red))
             )
 
@@ -543,7 +548,7 @@ class GroupCommand(AbstractSubCommand):
         if not group.is_src_admin(source):
             return self.perm_denied(source)
         if region not in group.regions:
-            return source.reply(
+            return reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr(
                         "error.region_not_found", region=str(region), group=group_name
@@ -551,13 +556,13 @@ class GroupCommand(AbstractSubCommand):
                 )
             )
         if group.remove_region(region):
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr("contracted", region=str(region), group=group_name)
                 )
             )
         else:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(self.ctr("error.unknown").set_color(RColor.red))
             )
 
@@ -597,7 +602,7 @@ class GroupCommand(AbstractSubCommand):
         player_name = PlayerNameString(player)
 
         if group.set_permission(player, permission):
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr(
                         "set",
@@ -608,12 +613,12 @@ class GroupCommand(AbstractSubCommand):
                 )
             )
         else:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(self.ctr("error.unknown").set_color(RColor.red))
             )
 
     def tell_permission_change_warning(self, source: CommandSource):
-        source.reply(
+        reply(source, 
             get_rfum_comp_prefix(
                 self.ctr("requires_confirm_1"),
                 get_rfum_comp_prefix(
@@ -733,13 +738,13 @@ class GroupCommand(AbstractSubCommand):
             *list_comp.get_page_line_list(page, item_per_page=item_per_page),
             list_comp.get_page_hint_line(page, item_per_page=item_per_page),
         ]
-        source.reply(get_rfum_comp_prefix(*text, divider="\n"))
+        reply(source, get_rfum_comp_prefix(*text, divider="\n"))
 
     def __set_default_permission(
         self, source: CommandSource, group: Group, permission: GroupPermission
     ):
         if group.set_default_permission(permission):
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr(
                         "set_default_perm",
@@ -749,7 +754,7 @@ class GroupCommand(AbstractSubCommand):
                 )
             )
         else:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(self.ctr("error.unknown").set_color(RColor.red))
             )
 
@@ -800,7 +805,7 @@ class GroupCommand(AbstractSubCommand):
         player_name = PlayerNameString(player)
 
         if group.remove_permission(player):
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr(
                         "deleted_perm",
@@ -810,7 +815,7 @@ class GroupCommand(AbstractSubCommand):
                 )
             )
         else:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(self.ctr("error.unknown").set_color(RColor.red))
             )
 
@@ -828,7 +833,7 @@ class GroupCommand(AbstractSubCommand):
             target_player
             not in group.get_data(self.rfum.group_manager).player_permission.keys()
         ):
-            return source.reply(
+            return reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr(
                         "error.perm_not_found", PlayerNameString(target_player)

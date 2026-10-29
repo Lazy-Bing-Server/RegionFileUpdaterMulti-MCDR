@@ -125,6 +125,7 @@ class PrimeBackupUpstream(AbstractUpstream):
                     continue
                 if not any([i is not None for i in return_items.values()]):
                     continue
+                self.__rfum.verbose(f"Matched: {p}\nResult: {json.dumps(result.named)}")
                 return return_items
             self.__rfum.verbose(f"Not matched: {p}")
         return None

@@ -13,6 +13,7 @@ from region_file_updater_multi.commands.sub_command import AbstractSubCommand
 from region_file_updater_multi.commands.tree_constants import *
 from region_file_updater_multi.components.misc import get_rfum_comp_prefix
 from region_file_updater_multi.mcdr_globals import *
+from region_file_updater_multi.utils.misc_tools import reply
 
 if TYPE_CHECKING:
     from region_file_updater_multi.rfum import RegionFileUpdaterMulti
@@ -64,7 +65,7 @@ class CommandManager:
         version_str = ".".join([str(n) for n in version.component])
         if version.pre is not None:
             version_str += "-" + str(version.pre)
-        source.reply(
+        reply(source, 
             self.__rfum.htr(
                 "command.help.overview",
                 plugin_name=meta.name,
@@ -86,7 +87,7 @@ class CommandManager:
 
     def reload_self(self, source: CommandSource):
         self.server.reload_plugin(self.server.get_self_metadata().id)
-        source.reply(get_rfum_comp_prefix(self.rtr(f"{RELOAD}.reloaded")))
+        reply(source, get_rfum_comp_prefix(self.rtr(f"{RELOAD}.reloaded")))
 
     def add_command(self, command: "AbstractSubCommand"):
         self.__registered_commands.append(command)

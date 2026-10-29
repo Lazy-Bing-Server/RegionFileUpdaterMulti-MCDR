@@ -9,6 +9,7 @@ from region_file_updater_multi.components.misc import (
 )
 from region_file_updater_multi.mcdr_globals import *
 from region_file_updater_multi.utils.units import Duration
+from region_file_updater_multi.utils.misc_tools import broadcast, reply
 
 
 class UpdateCommand(AbstractSubCommand):
@@ -60,11 +61,11 @@ class UpdateCommand(AbstractSubCommand):
 
     def execute_update(self, source: CommandSource, context: CommandContext):
         if len(self.rfum.current_session.get_current_regions()) == 0:
-            return source.reply(
+            return reply(source, 
                 get_rfum_comp_prefix(self.ctr("error.list_empty").set_color(RColor.red))
             )
         if self.rfum.current_session.is_session_running:
-            return source.reply(
+            return reply(source, 
                 get_rfum_comp_prefix(
                     self.rtr("error_message.session_running").set_color(RColor.red)
                 )
@@ -123,7 +124,7 @@ class UpdateCommand(AbstractSubCommand):
             .c(RAction.run_command, f"{current_prefix} {ABORT}")
             .h(self.ctr(f"{ABORT}_hint.hover")),
         ]
-        self.server.broadcast(
+        broadcast(
             RTextBase.join("\n", [get_rfum_comp_prefix(item) for item in text])
         )
         session.run_session(
@@ -133,21 +134,21 @@ class UpdateCommand(AbstractSubCommand):
     # !!rfum confirm
     def confirm_update(self, source: CommandSource):
         if not self.rfum.current_session.is_session_running:
-            return source.reply(
+            return reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr("error.nothing_to_confirm").set_color(RColor.red)
                 )
             )
-        source.reply(get_rfum_comp_prefix(self.ctr("execute_confirm")))
+        reply(source, get_rfum_comp_prefix(self.ctr("execute_confirm")))
         self.rfum.current_session.confirm_session()
 
     # !!rfum abort
     def abort_update(self, source: CommandSource):
         if not self.rfum.current_session.is_session_running:
-            return source.reply(
+            return reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr("error.nothing_to_abort").set_color(RColor.red)
                 )
             )
-        source.reply(get_rfum_comp_prefix(self.ctr("execute_abort")))
+        reply(source, get_rfum_comp_prefix(self.ctr("execute_abort")))
         self.rfum.current_session.abort_session()

@@ -13,6 +13,8 @@ from region_file_updater_multi.utils.misc_tools import (
     get_scheduler,
     named_thread,
     get_player_from_src,
+    broadcast,
+    say
 )
 from region_file_updater_multi.utils.units import Duration
 from region_file_updater_multi.components.misc import get_rfum_comp_prefix
@@ -118,7 +120,7 @@ class UpdateSession:
                 self.scheduler_add_job(
                     self.countdown, trigger=IntervalTrigger(seconds=1)
                 )
-            self.__rfum.server.broadcast(
+            broadcast(
                 get_rfum_comp_prefix(self.__rfum.rtr("session.task_confirmed"))
             )
             self.countdown()
@@ -128,8 +130,9 @@ class UpdateSession:
         server = rfum.server
         self.__cached_countdown -= 1
         if not self.__cached_countdown > 0 and self.__scheduler.running:
-            return self.scheduler_stop()
-        server.broadcast(
+            self.scheduler_stop()
+            return
+        broadcast(
             get_rfum_comp_prefix(
                 rfum.rtr(
                     "session.countdown",
@@ -162,7 +165,7 @@ class UpdateSession:
         def timed_out_handler():
             with self.__scheduler_lock:
                 self.scheduler_stop()
-                server.broadcast()
+                server.broadcast()   # TODO: Find out original purpose of this error usage
 
         acq = self.__session_pending_lock.acquire(blocking=False)
         if not acq:
@@ -180,7 +183,7 @@ class UpdateSession:
                 self.scheduler_start()
 
             if self.__aborted:
-                self.__rfum.server.broadcast(
+                broadcast(
                     get_rfum_comp_prefix(self.__rfum.rtr("session.task_aborted"))
                 )
                 return
@@ -215,7 +218,7 @@ class UpdateSession:
             self.__rfum.verbose("Restoring files")
             self.__rfum.file_utilities.restore_all()
             if server.is_server_startup():
-                server.say(self.__rfum.rtr("session.error_occurred", str(exc)))
+                say(self.__rfum.rtr("session.error_occurred", str(exc)))
             if not server.is_server_running():
                 server.start()
         finally:
