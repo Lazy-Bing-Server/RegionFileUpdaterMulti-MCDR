@@ -13,6 +13,7 @@ from region_file_updater_multi.upstream.impl.invalid_upstream import InvalidUpst
 from region_file_updater_multi.upstream.impl.pb_upstream import PrimeBackupUpstream
 from region_file_updater_multi.upstream.impl.world_upstream import WorldSaveUpstream
 from region_file_updater_multi.upstream.abstract_upstream import AbstractUpstream
+from region_file_updater_multi.utils.misc_tools import reply
 
 
 class UpstreamCommand(AbstractSubCommand):
@@ -63,7 +64,7 @@ class UpstreamCommand(AbstractSubCommand):
                 f"{UPSTREAM}.status.more_detail", pre=current_prefix, upstream=UPSTREAM
             ),
         ]
-        source.reply(get_rfum_comp_prefix(RTextBase.join("\n", text)))
+        reply(source, get_rfum_comp_prefix(RTextBase.join("\n", text)))
 
     def list_upstream(self, source: CommandSource, context: CommandContext):
         page, item_per_page = self.get_list_args(context)
@@ -153,7 +154,7 @@ class UpstreamCommand(AbstractSubCommand):
         )
         max_page = list_comp.get_max_page(item_per_page)
         if page != 1 and page > max_page:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(
                     self.rtr(f"{LIST}.error.page_index_out_of_range").set_color(
                         RColor.red
@@ -185,12 +186,12 @@ class UpstreamCommand(AbstractSubCommand):
                 + self.get_list_command_args_format(),
             )
         ]
-        source.reply(get_rfum_comp_prefix(*full_text, divider="\n"))
+        reply(source, get_rfum_comp_prefix(*full_text, divider="\n"))
 
     def set_upstream(self, source: CommandSource, context: CommandContext):
         upstream = context[UPS_NAME]
         if self.config.paths.current_upstream == upstream:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(
                     self.ctr("error.already_current", name=upstream).set_color(
                         RColor.red
@@ -202,7 +203,7 @@ class UpstreamCommand(AbstractSubCommand):
             self.config.paths.current_upstream = upstream
             self.rfum.save_config()
         except Exception as exc:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(
                     self.rtr(
                         f"{UPSTREAM}.set.fail", upstream=upstream, exc=str(exc)
@@ -210,7 +211,7 @@ class UpstreamCommand(AbstractSubCommand):
                 )
             )
         else:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(
                     self.rtr(f"{UPSTREAM}.set.success", upstream=upstream)
                 )

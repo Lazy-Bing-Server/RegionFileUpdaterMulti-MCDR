@@ -25,6 +25,7 @@ from region_file_updater_multi.mcdr_globals import *
 from region_file_updater_multi.commands.tree_constants import *
 from region_file_updater_multi.commands.node_factory import DurationNode
 from region_file_updater_multi.components.misc import get_rfum_comp_prefix
+from region_file_updater_multi.utils.misc_tools import reply
 
 
 if TYPE_CHECKING:
@@ -212,7 +213,7 @@ class AbstractSubCommand(ABC):
         )
 
     def perm_denied(self, source: CommandSource):
-        return source.reply(
+        return reply(source, 
             get_rfum_comp_prefix(self.rfum.command_manager.perm_denied_text_getter())
         )
 
@@ -255,7 +256,7 @@ class AbstractSubCommand(ABC):
 
     def is_session_running(self, source: CommandSource, silent=False) -> bool:
         if self.rfum.current_session.is_session_running and not silent:
-            source.reply(
+            reply(source, 
                 get_rfum_comp_prefix(self.rtr("error_message.session_running"))
             )
         return self.rfum.current_session.is_session_running

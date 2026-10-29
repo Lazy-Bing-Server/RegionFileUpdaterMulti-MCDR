@@ -7,6 +7,7 @@ from region_file_updater_multi.components.misc import (
 from region_file_updater_multi.commands.sub_command import AbstractSubCommand
 from region_file_updater_multi.mcdr_globals import *
 from region_file_updater_multi.commands.tree_constants import *
+from region_file_updater_multi.utils.misc_tools import reply
 
 
 class HelpCommand(AbstractSubCommand):
@@ -64,7 +65,7 @@ class HelpCommand(AbstractSubCommand):
             self.rtr("help.optional_arguments_title"),
             self.get_list_opt_args_text(),
         ]
-        source.reply(get_rfum_comp_prefix(RTextBase.join("\n", text)))
+        reply(source, get_rfum_comp_prefix(RTextBase.join("\n", text)))
 
     # !!rfum help add/del/del-all
     def help_add_del(self, source: CommandSource, context: CommandContext):
@@ -75,7 +76,7 @@ class HelpCommand(AbstractSubCommand):
             self.rtr(f"{ADD}_{DEL}.help.desc"),
             self.rtr("help.usage_title"),
             self.htr(
-                f"command.{ADD}_{DEL}.help.usage",
+                f"{ADD}_{DEL}.help.usage",
                 pre=current_prefix,
                 add=ADD,
                 del_=DEL,
@@ -85,7 +86,7 @@ class HelpCommand(AbstractSubCommand):
             self.rtr("help.arguments_title"),
             self.rtr("add_del.help.args"),
         ]
-        source.reply(get_rfum_comp_prefix() + RTextBase.join("\n", text))
+        reply(source, get_rfum_comp_prefix() + RTextBase.join("\n", text))
 
     def help_list(self, source: CommandSource, context: CommandContext):
         current_prefix = context.command.split(" ")[0]
@@ -104,7 +105,7 @@ class HelpCommand(AbstractSubCommand):
             self.rtr("help.optional_arguments_title"),
             self.get_list_opt_args_text(),
         ]
-        source.reply(get_rfum_comp_prefix(RTextBase.join("\n", text)))
+        reply(source, get_rfum_comp_prefix(RTextBase.join("\n", text)))
 
     def help_history(self, source: CommandSource, context: CommandContext):
         current_prefix = context.command.split(" ")[0]
@@ -122,7 +123,7 @@ class HelpCommand(AbstractSubCommand):
             self.rtr("help.optional_arguments_title"),
             self.get_list_opt_args_text(),
         ]
-        source.reply(get_rfum_comp_prefix(RTextBase.join("\n", text)))
+        reply(source, get_rfum_comp_prefix(RTextBase.join("\n", text)))
 
     def help_update(self, source: CommandSource, context: CommandContext):
         current_prefix = context.command.split(" ")[0]
@@ -162,7 +163,7 @@ class HelpCommand(AbstractSubCommand):
             ),
         ]
 
-        source.reply(get_rfum_comp_prefix(RTextBase.join("\n", text)))
+        reply(source, get_rfum_comp_prefix(RTextBase.join("\n", text)))
 
     def help_group(self, source: CommandSource, context: CommandContext):
         command = context.command.split(" ")[0] + " " + GROUP
@@ -185,4 +186,4 @@ class HelpCommand(AbstractSubCommand):
             self.rtr(f"{GROUP}.{HELP}.permission_title"),
             self.rtr(f"{GROUP}.{HELP}.permission_levels"),
         ]
-        source.reply(get_rfum_comp_prefix(RTextBase.join("\n", text)))
+        reply(source, get_rfum_comp_prefix(RTextBase.join("\n", text)))

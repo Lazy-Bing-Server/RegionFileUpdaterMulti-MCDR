@@ -89,7 +89,7 @@ class AddDelCommand(AbstractSubCommand):
                     region, misc_tools.get_player_from_src(source)
                 )
                 succeeded.append(region)
-        source.reply(
+        misc_tools.reply(source,
             get_rfum_comp_prefix(
                 self.ctr("batch_add", succeeded=len(succeeded), failed=len(failed)),
                 self.rtr(f"{LIST}.{LIST}_hint.text")
@@ -120,7 +120,7 @@ class AddDelCommand(AbstractSubCommand):
                     region, misc_tools.get_player_from_src(source)
                 )
                 succeeded.append(region)
-        source.reply(
+        misc_tools.reply(source,
             get_rfum_comp_prefix(
                 self.ctr("batch_del", succeeded=len(succeeded), failed=len(failed)),
                 self.rtr(f"{LIST}.{LIST}_hint.text")
@@ -135,7 +135,7 @@ class AddDelCommand(AbstractSubCommand):
         group_name = context[GROUP_NAME]
         group = self.rfum.group_manager.get_group(group_name)
         if group is None:
-            return source.reply(
+            return misc_tools.reply(source,
                 self.rtr(f"{GROUP}.error.not_found", group_name).set_color(RColor.red)
             )
         self.__batch_add_region(source, current_prefix, *group.regions)
@@ -144,7 +144,7 @@ class AddDelCommand(AbstractSubCommand):
         current_prefix = context.command.split(" ")[0]
         group_name = context[GROUP_NAME]
         if not self.rfum.group_manager.is_present(group_name):
-            return source.reply(
+            return misc_tools.reply(source,
                 self.rtr(f"{GROUP}.error.not_found", group_name).set_color(RColor.red)
             )
         regions = self.rfum.group_manager.get_group(group_name)
@@ -169,7 +169,7 @@ class AddDelCommand(AbstractSubCommand):
         head_text = "§f, §r".join([f"§b{item.name}§r" for item in head])
         if len(groups) > 3:
             head_text += "..."
-        source.reply(
+        misc_tools.reply(source,
             get_rfum_comp_prefix(
                 self.ctr("group_warning", region).set_color(RColor.yellow),
                 get_rfum_comp_prefix(head_text),
@@ -187,12 +187,12 @@ class AddDelCommand(AbstractSubCommand):
         if self.is_session_running(source):
             return
         if region in self.rfum.current_session.get_current_regions().keys():
-            return source.reply(get_rfum_comp_prefix(self.ctr("existed", str(region))))
+            return misc_tools.reply(source, get_rfum_comp_prefix(self.ctr("existed", str(region))))
         denied = list(self.rfum.group_manager.get_update_denied_groups(source, region))
         self.verbose("Banned by: " + str([g.name for g in denied]))
         if len(denied) > 0:
             self.verbose(f"Source {get_rfum_comp_prefix(source)} perm denied")
-            return source.reply(
+            return misc_tools.reply(source,
                 get_rfum_comp_prefix(self.command_manager.perm_denied_text_getter())
             )
         self.verbose(f"Source {misc_tools.get_player_from_src(source)} allowed")
@@ -201,17 +201,17 @@ class AddDelCommand(AbstractSubCommand):
         self.rfum.current_session.add_region(
             region, misc_tools.get_player_from_src(source)
         )
-        source.reply(get_rfum_comp_prefix(self.ctr("added", str(region))))
+        misc_tools.reply(source, get_rfum_comp_prefix(self.ctr("added", str(region))))
 
     def add_region_by_player_pos(self, source: CommandSource):
         if not isinstance(source, PlayerCommandSource):
-            return source.reply(
+            return misc_tools.reply(source,
                 get_rfum_comp_prefix(
                     self.ctr("error.not_a_player").set_color(RColor.red)
                 )
             )
         if self.server.get_plugin_instance(MINECRAFT_DATA_API) is None:
-            return source.reply(
+            return misc_tools.reply(source,
                 self.ctr("error.api_not_installed").set_color(RColor.red)
             )
         self.__add_region(
@@ -230,30 +230,30 @@ class AddDelCommand(AbstractSubCommand):
         if self.is_session_running(source):
             return
         if region not in self.rfum.current_session.get_current_regions().keys():
-            return source.reply(
+            return misc_tools.reply(source,
                 get_rfum_comp_prefix(self.ctr("not_added", str(region)))
             )
         if (
             self.config.region_protection.check_del_operations
             and not self.rfum.group_manager.is_region_permitted(source, region)
         ):
-            return source.reply(
+            return misc_tools.reply(source,
                 get_rfum_comp_prefix(self.command_manager.perm_denied_text_getter())
             )
         self.rfum.current_session.remove_region(
             region, misc_tools.get_player_from_src(source)
         )
-        source.reply(get_rfum_comp_prefix(self.ctr("removed", str(region))))
+        misc_tools.reply(source, get_rfum_comp_prefix(self.ctr("removed", str(region))))
 
     def del_region_with_player_pos(self, source: CommandSource):
         if not isinstance(source, PlayerCommandSource):
-            return source.reply(
+            return misc_tools.reply(source,
                 get_rfum_comp_prefix(
                     self.ctr("error.not_a_player").set_color(RColor.red)
                 )
             )
         if self.server.get_plugin_instance(MINECRAFT_DATA_API) is None:
-            return source.reply(
+            return misc_tools.reply(source,
                 self.ctr("error.api_not_installed").set_color(RColor.red)
             )
         self.__del_region(
@@ -266,21 +266,21 @@ class AddDelCommand(AbstractSubCommand):
     # !!rfum del-all
     def del_all_region(self, source: CommandSource):
         if len(self.rfum.current_session.get_current_regions()) == 0:
-            source.reply(
+            misc_tools.reply(source,
                 get_rfum_comp_prefix(
                     self.rtr(f"{UPDATE}.error.list_empty").set_color(RColor.red)
                 )
             )
             return
         if self.rfum.current_session.is_session_running:
-            source.reply(
+            misc_tools.reply(source,
                 get_rfum_comp_prefix(
                     self.rtr("error_message.session_running").set_color(RColor.red)
                 )
             )
             return
         self.rfum.current_session.remove_all_regions()
-        source.reply(get_rfum_comp_prefix(self.ctr("removed_all")))
+        misc_tools.reply(source, get_rfum_comp_prefix(self.ctr("removed_all")))
 
     # !!rfum list
     def list_region(self, source: CommandSource, context: CommandContext):
@@ -330,4 +330,4 @@ class AddDelCommand(AbstractSubCommand):
                 + self.get_list_command_args_format(),
             )
         ]
-        source.reply(get_rfum_comp_prefix(*full_text, divider="\n"))
+        misc_tools.reply(source, get_rfum_comp_prefix(*full_text, divider="\n"))
